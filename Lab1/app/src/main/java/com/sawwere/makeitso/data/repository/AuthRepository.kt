@@ -17,22 +17,35 @@ class AuthRepository @Inject constructor(
     }
 
     suspend fun signIn(email: String, password: String) {
+        if (currentUser?.isAnonymous == true) {
+            deleteAccount()
+        }
         authRemoteDataSource.signIn(email, password)
     }
 
     suspend fun signInWithCredential(credential: AuthCredential) {
+        if (currentUser?.isAnonymous == true) {
+            deleteAccount()
+        }
         authRemoteDataSource.signIn(credential)
     }
 
     suspend fun signUp(email: String, password: String) {
+        if (currentUser?.isAnonymous == true) {
+            deleteAccount()
+        }
        authRemoteDataSource.linkAccount(email, password)
     }
 
-    fun signOut() {
+    suspend fun signOut() {
+        if (currentUser?.isAnonymous == true) {
+            deleteAccount()
+        }
         authRemoteDataSource.signOut()
     }
 
     suspend fun deleteAccount() {
         authRemoteDataSource.deleteAccount()
     }
+
 }
