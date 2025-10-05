@@ -35,6 +35,7 @@ import androidx.constraintlayout.compose.Dimension
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.sawwere.makeitso.R
+import com.sawwere.makeitso.Route
 import com.sawwere.makeitso.data.model.TodoList
 import com.sawwere.makeitso.ui.shared.CenterTopAppBar
 import com.sawwere.makeitso.ui.shared.LoadingIndicator
@@ -44,7 +45,7 @@ import com.sawwere.makeitso.ui.theme.MediumYellow
 import kotlinx.serialization.Serializable
 
 @Serializable
-object HomeRoute
+object HomeRoute: Route("HomeRoute")
 
 @Composable
 fun HomeScreen(

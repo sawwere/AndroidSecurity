@@ -41,6 +41,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.sawwere.makeitso.R
+import com.sawwere.makeitso.Route
 import com.sawwere.makeitso.data.repository.AuthProvider
 import com.sawwere.makeitso.ui.shared.CenterTopAppBar
 import com.sawwere.makeitso.ui.shared.StandardButton
@@ -51,7 +52,7 @@ import com.sawwere.makeitso.ui.theme.MakeItSoTheme
 import kotlinx.serialization.Serializable
 
 @Serializable
-object SettingsRoute
+object SettingsRoute: Route("SettingsRoute")
 
 @Composable
 fun SettingsScreen(

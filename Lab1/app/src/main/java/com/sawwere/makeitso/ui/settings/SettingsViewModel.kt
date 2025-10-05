@@ -40,7 +40,8 @@ class SettingsViewModel @Inject constructor(
                 userEmail = currentUser?.email ?: "Нет данных об электронной почте",
                 authProvider = getAuthProvider(currentUser)
             )
-            _isAnonymous.value = currentUser != null && currentUser.isAnonymous
+            val iiis = currentUser?.isAnonymous
+            _isAnonymous.value = currentUser != null && iiis?: true
         }
     }
 

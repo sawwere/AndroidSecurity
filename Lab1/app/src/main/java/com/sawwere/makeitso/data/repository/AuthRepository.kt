@@ -5,11 +5,17 @@ import com.google.firebase.auth.FirebaseUser
 import com.sawwere.makeitso.data.datasource.AuthRemoteDataSource
 import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
+import javax.inject.Singleton
 
+@Singleton
 class AuthRepository @Inject constructor(
     private val authRemoteDataSource: AuthRemoteDataSource
 ) {
-    val currentUser: FirebaseUser? = authRemoteDataSource.currentUser
+    init {
+        println("AuthRepository instance created: $this")
+    }
+
+    val currentUser: FirebaseUser? get() = authRemoteDataSource.currentUser
     val currentUserIdFlow: Flow<String?> = authRemoteDataSource.currentUserIdFlow
 
     suspend fun createGuestAccount() {
@@ -34,13 +40,16 @@ class AuthRepository @Inject constructor(
         if (currentUser?.isAnonymous == true) {
             deleteAccount()
         }
+        if (currentUser == null) {
+            createGuestAccount()
+        }
        authRemoteDataSource.linkAccount(email, password)
     }
 
     suspend fun signOut() {
-        if (currentUser?.isAnonymous == true) {
-            deleteAccount()
-        }
+//        if (currentUser?.isAnonymous == true) {
+//            deleteAccount()
+//        }
         authRemoteDataSource.signOut()
     }
 

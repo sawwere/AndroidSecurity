@@ -36,6 +36,8 @@ import androidx.constraintlayout.compose.Dimension
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.sawwere.makeitso.R
+import com.sawwere.makeitso.Route
+import com.sawwere.makeitso.data.model.Priority
 import com.sawwere.makeitso.data.model.TodoItem
 import com.sawwere.makeitso.ui.shared.CenterTopAppBar
 import com.sawwere.makeitso.ui.shared.LoadingIndicator
@@ -48,7 +50,7 @@ import kotlinx.serialization.Serializable
 //TODO: Use listId when multiple lists feature is implemented
 
 @Serializable
-object TodoListRoute
+object TodoListRoute: Route("TodoListRoute")
 
 @Composable
 fun TodoListScreen(
@@ -61,7 +63,16 @@ fun TodoListScreen(
     if (isLoadingUser) {
         LoadingIndicator()
     } else {
-        val todoItems = viewModel.todoItems.collectAsStateWithLifecycle(emptyList())
+        val todoItems = viewModel.todoItems.collectAsStateWithLifecycle(
+            listOf(
+                TodoItem(
+                    id = "1",
+                    title = "first title",
+                    priority = Priority.HIGH.value,
+                    completed = false
+                )
+            )
+        )
 
         TodoListScreenContent(
             todoItems = todoItems.value,

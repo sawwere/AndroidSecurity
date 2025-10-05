@@ -15,10 +15,12 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.sawwere.makeitso.data.model.ErrorMessage
+import com.sawwere.makeitso.data.repository.AuthRepository
 import com.sawwere.makeitso.ui.home.HomeRoute
 import com.sawwere.makeitso.ui.home.HomeScreen
 import com.sawwere.makeitso.ui.settings.SettingsRoute
@@ -34,6 +36,7 @@ import com.sawwere.makeitso.ui.todolist.TodoListRoute
 import com.sawwere.makeitso.ui.todolist.TodoListScreen
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -46,6 +49,8 @@ class MainActivity : ComponentActivity() {
             val scope = rememberCoroutineScope()
             val snackbarHostState = remember { SnackbarHostState() }
             val navController = rememberNavController()
+            val viewModel: AuthViewModel = hiltViewModel()
+            val authNavController = remember { AuthNavController(navController, viewModel) }
 
             MakeItSoTheme {
                 Surface(
@@ -63,31 +68,31 @@ class MainActivity : ComponentActivity() {
                         ) {
                             composable<HomeRoute> { HomeScreen(
                                 openSettingsScreen = {
-                                    navController.navigate(SettingsRoute) { launchSingleTop = true }
+                                    authNavController.navigate(SettingsRoute) { launchSingleTop = true }
                                 }
                             ) }
                             composable<TodoListRoute> { TodoListScreen(
                                 openSettingsScreen = {
-                                    navController.navigate(SettingsRoute) { launchSingleTop = true }
+                                    authNavController.navigate(SettingsRoute) { launchSingleTop = true }
                                 },
                                 openTodoItemScreen = { itemId ->
-                                    navController.navigate(TodoItemRoute(itemId)) { launchSingleTop = true }
+                                    authNavController.navigate(TodoItemRoute(itemId)) { launchSingleTop = true }
                                 }
                             ) }
                             composable<SettingsRoute> { SettingsScreen(
                                 openHomeScreen = {
-                                    navController.navigate(TodoListRoute) { launchSingleTop = true }
+                                    authNavController.navigate(TodoListRoute) { launchSingleTop = true }
                                 },
                                 openSignInScreen = {
-                                    navController.navigate(SignInRoute) { launchSingleTop = true }
+                                    authNavController.navigate(SignInRoute) { launchSingleTop = true }
                                 }
                             ) }
                             composable<SignInRoute> { SignInScreen(
                                 openHomeScreen = {
-                                    navController.navigate(TodoListRoute) { launchSingleTop = true }
+                                    authNavController.navigate(TodoListRoute) { launchSingleTop = true }
                                 },
                                 openSignUpScreen = {
-                                    navController.navigate(SignUpRoute) { launchSingleTop = true }
+                                    authNavController.navigate(SignUpRoute) { launchSingleTop = true }
                                 },
                                 showErrorSnackbar = { errorMessage ->
                                     val message = getErrorMessage(errorMessage)
@@ -96,7 +101,7 @@ class MainActivity : ComponentActivity() {
                             ) }
                             composable<SignUpRoute> { SignUpScreen(
                                 openHomeScreen = {
-                                    navController.navigate(TodoListRoute) { launchSingleTop = true }
+                                    authNavController.navigate(TodoListRoute) { launchSingleTop = true }
                                 },
                                 showErrorSnackbar = { errorMessage ->
                                     val message = getErrorMessage(errorMessage)
@@ -105,7 +110,7 @@ class MainActivity : ComponentActivity() {
                             ) }
                             composable<TodoItemRoute> { TodoItemScreen(
                                 openTodoListScreen = {
-                                    navController.navigate(TodoListRoute) { launchSingleTop = true }
+                                    authNavController.navigate(TodoListRoute) { launchSingleTop = true }
                                 },
                                 showErrorSnackbar = { errorMessage ->
                                     val message = getErrorMessage(errorMessage)

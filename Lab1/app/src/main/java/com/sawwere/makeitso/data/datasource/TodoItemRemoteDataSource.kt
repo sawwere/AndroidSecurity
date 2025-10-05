@@ -4,6 +4,7 @@ import com.sawwere.makeitso.data.model.TodoItem
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.dataObjects
 import com.google.firebase.firestore.toObject
+import com.sawwere.makeitso.data.model.Priority
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flatMapLatest
@@ -23,8 +24,15 @@ class TodoItemRemoteDataSource @Inject constructor(
         }
     }
 
+    // TODO
     suspend fun getTodoItem(itemId: String): TodoItem? {
-        return firestore.collection(TODO_ITEMS_COLLECTION).document(itemId).get().await().toObject()
+        return TodoItem(
+            id = "1",
+            title = "first title",
+            priority = Priority.HIGH.value,
+            completed = false
+        )
+        //firestore.collection(TODO_ITEMS_COLLECTION).document(itemId).get().await().toObject()
     }
 
     suspend fun create(todoItem: TodoItem): String {

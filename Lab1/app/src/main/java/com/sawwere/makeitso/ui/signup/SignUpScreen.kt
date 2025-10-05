@@ -30,13 +30,14 @@ import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.sawwere.makeitso.R
+import com.sawwere.makeitso.Route
 import com.sawwere.makeitso.data.model.ErrorMessage
 import com.sawwere.makeitso.ui.shared.StandardButton
 import com.sawwere.makeitso.ui.theme.MakeItSoTheme
 import kotlinx.serialization.Serializable
 
 @Serializable
-object SignUpRoute
+object SignUpRoute: Route("SignUpRoute")
 
 @Composable
 fun SignUpScreen(

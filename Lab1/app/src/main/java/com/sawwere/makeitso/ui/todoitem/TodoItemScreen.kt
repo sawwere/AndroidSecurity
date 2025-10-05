@@ -39,6 +39,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.sawwere.makeitso.R
+import com.sawwere.makeitso.Route
 import com.sawwere.makeitso.data.model.ErrorMessage
 import com.sawwere.makeitso.data.model.Priority
 import com.sawwere.makeitso.data.model.Priority.HIGH
@@ -59,7 +60,7 @@ import com.sawwere.makeitso.ui.theme.MediumYellow
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class TodoItemRoute(val itemId: String)
+data class TodoItemRoute(val itemId: String): Route("TodoItemRoute", requiresAuth = true)
 
 @Composable
 fun TodoItemScreen(
