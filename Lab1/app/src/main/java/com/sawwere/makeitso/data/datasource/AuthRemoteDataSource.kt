@@ -1,5 +1,6 @@
 package com.sawwere.makeitso.data.datasource
 
+import com.google.firebase.auth.AuthCredential
 import com.google.firebase.auth.EmailAuthProvider
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
@@ -27,9 +28,17 @@ class AuthRemoteDataSource @Inject constructor(private val auth: FirebaseAuth) {
         auth.signInWithEmailAndPassword(email, password).await()
     }
 
+    suspend fun signIn(credential: AuthCredential) {
+        auth.signInWithCredential(credential).await()
+    }
+
     suspend fun linkAccount(email: String, password: String) {
         val credential = EmailAuthProvider.getCredential(email, password)
         auth.currentUser!!.linkWithCredential(credential).await()
+    }
+
+    suspend fun linkAccount(authCredential: AuthCredential) {
+        auth.currentUser!!.linkWithCredential(authCredential).await()
     }
 
     fun signOut() {

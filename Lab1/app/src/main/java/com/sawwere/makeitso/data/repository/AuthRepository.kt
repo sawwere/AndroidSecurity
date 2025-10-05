@@ -1,5 +1,6 @@
 package com.sawwere.makeitso.data.repository
 
+import com.google.firebase.auth.AuthCredential
 import com.google.firebase.auth.FirebaseUser
 import com.sawwere.makeitso.data.datasource.AuthRemoteDataSource
 import kotlinx.coroutines.flow.Flow
@@ -17,6 +18,10 @@ class AuthRepository @Inject constructor(
 
     suspend fun signIn(email: String, password: String) {
         authRemoteDataSource.signIn(email, password)
+    }
+
+    suspend fun signInWithCredential(credential: AuthCredential) {
+        authRemoteDataSource.signIn(credential)
     }
 
     suspend fun signUp(email: String, password: String) {

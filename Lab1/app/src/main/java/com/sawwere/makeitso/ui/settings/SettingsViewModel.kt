@@ -1,7 +1,10 @@
 package com.sawwere.makeitso.ui.settings
 
+import com.google.firebase.auth.FirebaseUser
 import com.sawwere.makeitso.MainViewModel
+import com.sawwere.makeitso.data.repository.AuthProvider
 import com.sawwere.makeitso.data.repository.AuthRepository
+import com.sawwere.makeitso.data.repository.getAuthProvider
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -20,9 +23,23 @@ class SettingsViewModel @Inject constructor(
     val isAnonymous: StateFlow<Boolean>
         get() = _isAnonymous.asStateFlow()
 
+    private val _uiState = MutableStateFlow(SignInUiState())
+    val uiState: StateFlow<SignInUiState> = _uiState.asStateFlow()
+
+    data class SignInUiState(
+        val currentUser: FirebaseUser? = null,
+        val userEmail: String? = null,
+        val authProvider: AuthProvider? = null
+    )
+
     fun loadCurrentUser() {
         launchCatching {
             val currentUser = authRepository.currentUser
+            _uiState.value = _uiState.value.copy(
+                currentUser = currentUser,
+                userEmail = currentUser?.email ?: "Нет данных об электронной почте",
+                authProvider = getAuthProvider(currentUser)
+            )
             _isAnonymous.value = currentUser != null && currentUser.isAnonymous
         }
     }

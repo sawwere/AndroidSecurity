@@ -44,12 +44,10 @@ import com.sawwere.makeitso.data.model.Priority
 import com.sawwere.makeitso.data.model.Priority.HIGH
 import com.sawwere.makeitso.data.model.Priority.LOW
 import com.sawwere.makeitso.data.model.Priority.MEDIUM
-import com.sawwere.makeitso.data.model.Priority.NONE
 import com.sawwere.makeitso.data.model.TodoItem
 import com.sawwere.makeitso.data.model.isHighPriority
 import com.sawwere.makeitso.data.model.isLowPriority
 import com.sawwere.makeitso.data.model.isMediumPriority
-import com.sawwere.makeitso.data.model.isNonePriority
 import com.sawwere.makeitso.ui.shared.AppSwitch
 import com.sawwere.makeitso.ui.shared.CenterTopAppBar
 import com.sawwere.makeitso.ui.shared.LoadingIndicator
@@ -213,12 +211,6 @@ fun TodoItemScreenContent(
                     PriorityChip(LOW, editableItem.value.isLowPriority) {
                         editableItem.value = editableItem.value.copy(
                             priority = LOW.value
-                        )
-                    }
-
-                    PriorityChip(NONE, editableItem.value.isNonePriority) {
-                        editableItem.value = editableItem.value.copy(
-                            priority = NONE.value
                         )
                     }
                 }

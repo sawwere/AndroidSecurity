@@ -44,4 +44,5 @@
     <string name="delete_account_description">Are you sure you want to delete your account? This action is irreversible.</string>
     <string name="delete">Delete</string>
     <string name="cancel">Cancel</string>
+    <string name="default_web_client_id">a</string>
 </resources>
