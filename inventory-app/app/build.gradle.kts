@@ -85,4 +85,6 @@ dependencies {
     ksp("androidx.room:room-compiler:${rootProject.extra["room_version"]}")
     implementation("androidx.room:room-ktx:${rootProject.extra["room_version"]}")
 
+    implementation("com.google.code.gson:gson:2.10.1")
+
 }
