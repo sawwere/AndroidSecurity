@@ -22,8 +22,23 @@ class ItemDaoTest {
     private lateinit var itemDao: ItemDao
     private lateinit var inventoryDatabase: InventoryDatabase
 
-    private var item1 = Item(1, "Apples", 10.0, 20)
-    private var item2 = Item(2, "Bananas", 15.0, 97)
+    private var item1 = Item(
+        1,
+        "Apples",
+        10.0,
+        20,
+        supplierName = "supName1",
+        supplierPhone = "88005553535",
+        supplierEmail = "mail1@example.com"
+    )
+    private var item2 = Item(2,
+        "Bananas",
+        15.0,
+        97,
+        supplierName = "supName2",
+        supplierPhone = "88005553535",
+        supplierEmail = "mail2@example.com"
+    )
 
     @Before
     fun createDb() {
@@ -64,12 +79,30 @@ class ItemDaoTest {
     @Throws(Exception::class)
     fun daoUpdateItems_updatesItemsInDB() = runBlocking {
         addTwoItemsToDb()
-        itemDao.update(Item(1, "Apples", 15.0, 25))
-        itemDao.update(Item(2, "Bananas", 5.0, 50))
+        itemDao.update(Item(1,
+            "Apples",
+            15.0,
+            25,
+            supplierName = "supName1",
+            supplierPhone = "88005553535",
+            supplierEmail = "mail1@example.com")
+        )
+        itemDao.update(Item(2, "Bananas", 5.0, 50,
+            supplierName = "supName2",
+            supplierPhone = "88005553535",
+            supplierEmail = "mail2@example.com"))
 
         val allItems = itemDao.getAllItems().first()
-        assertEquals(allItems[0], Item(1, "Apples", 15.0, 25))
-        assertEquals(allItems[1], Item(2, "Bananas", 5.0, 50))
+        assertEquals(allItems[0], Item(1, "Apples", 15.0, 25,
+            supplierName = "supName1",
+            supplierPhone = "88005553535",
+            supplierEmail = "mail1@example.com")
+        )
+        assertEquals(allItems[1], Item(2, "Bananas", 5.0, 50,
+            supplierName = "supName2",
+            supplierPhone = "88005553535",
+            supplierEmail = "mail2@example.com")
+        )
     }
 
     @Test

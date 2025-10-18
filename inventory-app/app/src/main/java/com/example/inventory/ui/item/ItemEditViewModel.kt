@@ -48,16 +48,22 @@ class ItemEditViewModel(
             itemUiState = itemsRepository.getItemStream(itemId)
                 .filterNotNull()
                 .first()
-                .toItemUiState(true)
+                .toItemUiState()
         }
     }
 
     /**
      * Update the item in the [ItemsRepository]'s data source
      */
-    suspend fun updateItem() {
-        if (validateInput(itemUiState.itemDetails)) {
-            itemsRepository.updateItem(itemUiState.itemDetails.toItem())
+    suspend fun updateItem(): Boolean {
+        val currentErrors = validateInput(itemUiState.itemDetails)
+        itemUiState = itemUiState.copy(errors = currentErrors)
+
+        return if (currentErrors.isEmpty()) {
+            itemsRepository.insertItem(itemUiState.itemDetails.toItem())
+            true
+        } else {
+            false
         }
     }
 
@@ -67,12 +73,6 @@ class ItemEditViewModel(
      */
     fun updateUiState(itemDetails: ItemDetails) {
         itemUiState =
-            ItemUiState(itemDetails = itemDetails, isEntryValid = validateInput(itemDetails))
-    }
-
-    private fun validateInput(uiState: ItemDetails = itemUiState.itemDetails): Boolean {
-        return with(uiState) {
-            name.isNotBlank() && price.isNotBlank() && quantity.isNotBlank()
-        }
+            ItemUiState(itemDetails = itemDetails, errors = validateInput(itemDetails))
     }
 }

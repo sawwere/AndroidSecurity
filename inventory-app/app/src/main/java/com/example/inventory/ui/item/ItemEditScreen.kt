@@ -70,8 +70,10 @@ fun ItemEditScreen(
             onItemValueChange = viewModel::updateUiState,
             onSaveClick = {
                 coroutineScope.launch {
-                    viewModel.updateItem()
-                    navigateBack()
+                    val success = viewModel.updateItem()
+                    if (success) {
+                        navigateBack()
+                    }
                 }
             },
             modifier = Modifier

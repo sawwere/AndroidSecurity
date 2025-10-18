@@ -26,6 +26,12 @@
     <string name="item_entry_title">Add Item</string>
     <string name="item_name_req">Item Name*</string>
     <string name="item_price_req">Item Price*</string>
+    <string name="item_supplier_name_req">Supplier name*</string>
+    <string name="item_supplier_phone_req">Supplier phone*</string>
+    <string name="item_suppler_email_req">Supplier email*</string>
+    <string name="supplier_name">Supplier name</string>
+    <string name="supplier_phone">Supplier phone</string>
+    <string name="suppler_email">Supplier email</string>
     <string name="no">No</string>
     <string name="price">Price</string>
     <string name="quantity_in_stock">Quantity in stock</string>

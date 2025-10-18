@@ -37,24 +37,22 @@ class ItemEntryViewModel(
     var itemUiState by mutableStateOf(ItemUiState())
         private set
 
-    /**
-     * Updates the [itemUiState] with the value provided in the argument. This method also triggers
-     * a validation for input values.
-     */
     fun updateUiState(itemDetails: ItemDetails) {
-        itemUiState =
-            ItemUiState(itemDetails = itemDetails, isEntryValid = validateInput(itemDetails))
+        itemUiState = ItemUiState(
+            itemDetails = itemDetails,
+            errors = emptyMap()
+        )
     }
 
-    private fun validateInput(uiState: ItemDetails = itemUiState.itemDetails): Boolean {
-        return with(uiState) {
-            name.isNotBlank() && price.isNotBlank() && quantity.isNotBlank()
-        }
-    }
+    suspend fun saveItem(): Boolean {
+        val currentErrors = validateInput(itemUiState.itemDetails)
+        itemUiState = itemUiState.copy(errors = currentErrors)
 
-    suspend fun saveItem() {
-        if (validateInput()) {
+        return if (currentErrors.isEmpty()) {
             itemsRepository.insertItem(itemUiState.itemDetails.toItem())
+            true
+        } else {
+            false
         }
     }
 }
@@ -64,7 +62,7 @@ class ItemEntryViewModel(
  */
 data class ItemUiState(
     val itemDetails: ItemDetails = ItemDetails(),
-    val isEntryValid: Boolean = false
+    var errors: Map<String, String> = HashMap()
 )
 
 data class ItemDetails(
@@ -72,6 +70,9 @@ data class ItemDetails(
     val name: String = "",
     val price: String = "",
     val quantity: String = "",
+    val supplierName: String = "",
+    val supplierPhone: String = "",
+    val supplierEmail: String = "",
 )
 
 /**
@@ -83,7 +84,10 @@ fun ItemDetails.toItem(): Item = Item(
     id = id,
     name = name,
     price = price.toDoubleOrNull() ?: 0.0,
-    quantity = quantity.toIntOrNull() ?: 0
+    quantity = quantity.toIntOrNull() ?: 0,
+    supplierName = supplierName,
+    supplierEmail = supplierEmail,
+    supplierPhone = supplierPhone
 )
 
 fun Item.formatedPrice(): String {
@@ -93,9 +97,9 @@ fun Item.formatedPrice(): String {
 /**
  * Extension function to convert [Item] to [ItemUiState]
  */
-fun Item.toItemUiState(isEntryValid: Boolean = false): ItemUiState = ItemUiState(
+fun Item.toItemUiState(): ItemUiState = ItemUiState(
     itemDetails = this.toItemDetails(),
-    isEntryValid = isEntryValid
+    errors = emptyMap()
 )
 
 /**
@@ -105,5 +109,8 @@ fun Item.toItemDetails(): ItemDetails = ItemDetails(
     id = id,
     name = name,
     price = price.toString(),
-    quantity = quantity.toString()
+    quantity = quantity.toString(),
+    supplierName = supplierName,
+    supplierEmail = supplierEmail,
+    supplierPhone = supplierPhone
 )

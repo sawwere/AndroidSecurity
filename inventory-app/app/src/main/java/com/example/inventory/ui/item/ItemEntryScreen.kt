@@ -79,8 +79,10 @@ fun ItemEntryScreen(
             onItemValueChange = viewModel::updateUiState,
             onSaveClick = {
                 coroutineScope.launch {
-                    viewModel.saveItem()
-                    navigateBack()
+                    val success = viewModel.saveItem()
+                    if (success) {
+                        navigateBack()
+                    }
                 }
             },
             modifier = Modifier
@@ -108,12 +110,13 @@ fun ItemEntryBody(
         ) {
         ItemInputForm(
             itemDetails = itemUiState.itemDetails,
+            fieldErrors = itemUiState.errors,
             onValueChange = onItemValueChange,
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
         )
         Button(
             onClick = onSaveClick,
-            enabled = itemUiState.isEntryValid,
+            enabled = itemUiState.errors.isEmpty(),
             shape = MaterialTheme.shapes.small,
             modifier = Modifier.fillMaxWidth()
         ) {
@@ -125,6 +128,7 @@ fun ItemEntryBody(
 @Composable
 fun ItemInputForm(
     itemDetails: ItemDetails,
+    fieldErrors: Map<String, String>,
     modifier: Modifier = Modifier,
     onValueChange: (ItemDetails) -> Unit = {},
     enabled: Boolean = true
@@ -144,7 +148,13 @@ fun ItemInputForm(
             ),
             modifier = Modifier.fillMaxWidth(),
             enabled = enabled,
-            singleLine = true
+            singleLine = true,
+            isError = fieldErrors.containsKey("name"),
+            supportingText = {
+                if (fieldErrors.containsKey("name")) {
+                    Text(text = fieldErrors["name"] ?: "")
+                }
+            },
         )
         OutlinedTextField(
             value = itemDetails.price,
@@ -159,7 +169,13 @@ fun ItemInputForm(
             leadingIcon = { Text(Currency.getInstance(Locale.getDefault()).symbol) },
             modifier = Modifier.fillMaxWidth(),
             enabled = enabled,
-            singleLine = true
+            singleLine = true,
+            isError = fieldErrors.containsKey("price"),
+            supportingText = {
+                if (fieldErrors.containsKey("price")) {
+                    Text(text = fieldErrors["price"] ?: "")
+                }
+            },
         )
         OutlinedTextField(
             value = itemDetails.quantity,
@@ -173,7 +189,72 @@ fun ItemInputForm(
             ),
             modifier = Modifier.fillMaxWidth(),
             enabled = enabled,
-            singleLine = true
+            singleLine = true,
+            isError = fieldErrors.containsKey("quantity"),
+            supportingText = {
+                if (fieldErrors.containsKey("quantity")) {
+                    Text(text = fieldErrors["quantity"] ?: "")
+                }
+            },
+        )
+        OutlinedTextField(
+            value = itemDetails.supplierName,
+            onValueChange = { onValueChange(itemDetails.copy(supplierName = it)) },
+            label = { Text(stringResource(R.string.item_supplier_name_req)) },
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedContainerColor = MaterialTheme.colorScheme.secondaryContainer,
+                unfocusedContainerColor = MaterialTheme.colorScheme.secondaryContainer,
+                disabledContainerColor = MaterialTheme.colorScheme.secondaryContainer,
+            ),
+            modifier = Modifier.fillMaxWidth(),
+            enabled = enabled,
+            singleLine = true,
+            isError = fieldErrors.containsKey("supplierName"),
+            supportingText = {
+                if (fieldErrors.containsKey("supplierName")) {
+                    Text(text = fieldErrors["supplierName"] ?: "")
+                }
+            },
+        )
+        OutlinedTextField(
+            value = itemDetails.supplierEmail,
+            onValueChange = { onValueChange(itemDetails.copy(supplierEmail = it)) },
+            label = { Text(stringResource(R.string.item_suppler_email_req)) },
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedContainerColor = MaterialTheme.colorScheme.secondaryContainer,
+                unfocusedContainerColor = MaterialTheme.colorScheme.secondaryContainer,
+                disabledContainerColor = MaterialTheme.colorScheme.secondaryContainer,
+            ),
+            modifier = Modifier.fillMaxWidth(),
+            enabled = enabled,
+            singleLine = true,
+            isError = fieldErrors.containsKey("supplierEmail"),
+            supportingText = {
+                if (fieldErrors.containsKey("supplierEmail")) {
+                    Text(text = fieldErrors["supplierEmail"] ?: "")
+                }
+            },
+        )
+        OutlinedTextField(
+            value = itemDetails.supplierPhone,
+            onValueChange = { onValueChange(itemDetails.copy(supplierPhone = it)) },
+            label = { Text(stringResource(R.string.item_supplier_phone_req)) },
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedContainerColor = MaterialTheme.colorScheme.secondaryContainer,
+                unfocusedContainerColor = MaterialTheme.colorScheme.secondaryContainer,
+                disabledContainerColor = MaterialTheme.colorScheme.secondaryContainer,
+            ),
+            modifier = Modifier.fillMaxWidth(),
+            enabled = enabled,
+            singleLine = true,
+            isError = fieldErrors.containsKey("supplierPhone"),
+            supportingText = {
+                if (fieldErrors.containsKey("supplierPhone")) {
+                    Text(text = fieldErrors["supplierPhone"] ?: "")
+                }
+            },
         )
         if (enabled) {
             Text(
