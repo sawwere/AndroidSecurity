@@ -20,6 +20,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
+import com.example.inventory.data.AppSettingsManager
 import com.example.inventory.data.Item
 import com.example.inventory.data.ItemsRepository
 import java.text.NumberFormat
@@ -28,7 +29,8 @@ import java.text.NumberFormat
  * ViewModel to validate and insert items in the Room database.
  */
 class ItemEntryViewModel(
-    private val itemsRepository: ItemsRepository
+    private val itemsRepository: ItemsRepository,
+    private val settingsManager: AppSettingsManager
 ) : ViewModel() {
 
     /**
@@ -36,6 +38,15 @@ class ItemEntryViewModel(
      */
     var itemUiState by mutableStateOf(ItemUiState())
         private set
+
+    init {
+        if (settingsManager.useDefaultQuantity) {
+            itemUiState = itemUiState.copy(
+                itemDetails = itemUiState.itemDetails.copy(quantity = settingsManager.defaultQuantity),
+                errors = itemUiState.errors
+            )
+        }
+    }
 
     fun updateUiState(itemDetails: ItemDetails) {
         itemUiState = ItemUiState(

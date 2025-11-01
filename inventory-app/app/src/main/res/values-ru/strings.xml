@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Inventory</string>
+    <string name="attention">Внимание</string>
+    <string name="back_button">Назад</string>
+    <string name="delete">Удалить</string>
+    <string name="delete_question">Вы действительно хотите удалить?</string>
+    <string name="no_item_description">Упс</string>
+    <string name="edit_item_title">Редактировать</string>
+    <string name="item_detail_title">О товаре</string>
+    <string name="item_entry_title">Добавить</string>
+    <string name="item_name_req">Наименование*</string>
+    <string name="item">Товар</string>
+    <string name="item_price_req">Цена товара*</string>
+    <string name="item_supplier_name_req">Имя поставщика*</string>
+    <string name="item_supplier_phone_req">Телефон поставщика*</string>
+    <string name="item_suppler_email_req">Почта поставщика*</string>
+    <string name="supplier_name">Имя поставщика</string>
+    <string name="supplier_phone">Телефон поставщика</string>
+    <string name="suppler_email">Почта поставщика</string>
+    <string name="no">Нет</string>
+    <string name="price">Цена</string>
+    <string name="quantity_in_stock">В наличии</string>
+    <string name="in_stock">%d в наличии</string>
+    <string name="quantity_req">В наличии*</string>
+    <string name="save_action">Сохранить</string>
+    <string name="sell">Продать</string>
+    <string name="yes">Да</string>
+    <string name="required_fields">*необходимые поля</string>
+    <string name="share">Поделиться</string>
+    <string name="settings">Настройки</string>
+    <string name="save_default_quantity">Использовать дефолтное количество</string>
+    <string name="auto_set_item_quantity">Автоматически подставляет количество при создании товара</string>
+    <string name="default_quantity">Дефолтное количество</string>
+    <string name="restrict_sharing">Запретить отправку данных</string>
+    <string name="blocks_sharing_button">Блокирует кнопку \'Поделиться\' в окне просмотра</string>
+    <string name="hides_supplier_info">Скрывает данные поставщика в окне просмотра</string>
+    <string name="hide_supplier_info">Скрыть чувствительные данные</string>
+    <string name="sharing_is_disabled_text">Отправка данных запрещена в настройках приложения</string>
+</resources>

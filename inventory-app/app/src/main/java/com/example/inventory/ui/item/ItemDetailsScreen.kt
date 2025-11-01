@@ -60,6 +60,7 @@ import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.inventory.InventoryTopAppBar
 import com.example.inventory.R
@@ -119,6 +120,8 @@ fun ItemDetailsScreen(
                     navigateBack()
                 }
             },
+            shouldHideSensitiveData = viewModel.shouldHideSensitiveData,
+            isSharingDisabled = viewModel.isSharingDisabled,
             modifier = Modifier
                 .padding(
                     start = innerPadding.calculateStartPadding(LocalLayoutDirection.current),
@@ -135,6 +138,8 @@ private fun ItemDetailsBody(
     itemDetailsUiState: ItemDetailsUiState,
     onSellItem: () -> Unit,
     onDelete: () -> Unit,
+    shouldHideSensitiveData: Boolean,
+    isSharingDisabled: Boolean,
     modifier: Modifier = Modifier
 ) {
     val item = itemDetailsUiState.itemDetails.toItem()
@@ -154,6 +159,7 @@ private fun ItemDetailsBody(
 
         ItemDetails(
             item = itemDetailsUiState.itemDetails.toItem(),
+            shouldHideSensitiveData = shouldHideSensitiveData,
             modifier = Modifier.fillMaxWidth()
         )
         Button(
@@ -165,6 +171,7 @@ private fun ItemDetailsBody(
             Text(stringResource(R.string.sell))
         }
         OutlinedButton(
+            enabled = !isSharingDisabled,
             onClick = {
                 val jsonText = gson.toJson(item)
                 val sendIntent: Intent = Intent().apply {
@@ -186,6 +193,14 @@ private fun ItemDetailsBody(
             )
             Spacer(Modifier.size(ButtonDefaults.IconSpacing))
             Text(stringResource(R.string.share))
+        }
+        if (isSharingDisabled) {
+            Text(
+                text = stringResource(R.string.sharing_is_disabled_text),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.error,
+                modifier = Modifier.padding(top = 4.dp)
+            )
         }
         OutlinedButton(
             onClick = { deleteConfirmationRequired = true },
@@ -209,7 +224,9 @@ private fun ItemDetailsBody(
 
 @Composable
 fun ItemDetails(
-    item: Item, modifier: Modifier = Modifier
+    item: Item,
+    shouldHideSensitiveData: Boolean,
+    modifier: Modifier = Modifier
 ) {
     Card(
         modifier = modifier,
@@ -249,21 +266,21 @@ fun ItemDetails(
             )
             ItemDetailsRow(
                 labelResID = R.string.supplier_name,
-                itemDetail = item.supplierName,
+                itemDetail = if (shouldHideSensitiveData) "***" else item.supplierName,
                 modifier = Modifier.padding(
                     horizontal = dimensionResource(id = R.dimen.padding_medium)
                 )
             )
             ItemDetailsRow(
                 labelResID = R.string.suppler_email,
-                itemDetail = item.supplierEmail,
+                itemDetail = if (shouldHideSensitiveData) "***" else item.supplierEmail,
                 modifier = Modifier.padding(
                     horizontal = dimensionResource(id = R.dimen.padding_medium)
                 )
             )
             ItemDetailsRow(
                 labelResID = R.string.supplier_phone,
-                itemDetail = item.supplierPhone,
+                itemDetail = if (shouldHideSensitiveData) "***" else item.supplierPhone,
                 modifier = Modifier.padding(
                     horizontal = dimensionResource(id = R.dimen.padding_medium)
                 )
@@ -314,7 +331,9 @@ fun ItemDetailsScreenPreview() {
                 itemDetails = ItemDetails(1, "Pen", "$100", "10")
             ),
             onSellItem = {},
-            onDelete = {}
+            onDelete = {},
+            shouldHideSensitiveData = false,
+            isSharingDisabled = true,
         )
     }
 }

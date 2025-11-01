@@ -42,4 +42,13 @@
     <string name="yes">Yes</string>
     <string name="required_fields">*required fields</string>
     <string name="share">Share</string>
+    <string name="settings">Settings</string>
+    <string name="save_default_quantity">Use the default quantity</string>
+    <string name="auto_set_item_quantity">Automatically sets the quantity when creating the item</string>
+    <string name="default_quantity">Default quantity</string>
+    <string name="restrict_sharing">Restrict sending data</string>
+    <string name="blocks_sharing_button">Blocks the Share button</string>
+    <string name="hides_supplier_info">Hides the supplier\'s data in the details view</string>
+    <string name="hide_supplier_info">Hide sensitive data</string>
+    <string name="sharing_is_disabled_text">Sending data is disabled in the application settings.</string>
 </resources>

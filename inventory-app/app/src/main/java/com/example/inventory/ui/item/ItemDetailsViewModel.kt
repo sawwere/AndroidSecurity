@@ -19,6 +19,7 @@ package com.example.inventory.ui.item
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.inventory.data.AppSettingsManager
 import com.example.inventory.data.ItemsRepository
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -32,7 +33,8 @@ import kotlinx.coroutines.launch
  */
 class ItemDetailsViewModel(
     savedStateHandle: SavedStateHandle,
-    private val itemsRepository: ItemsRepository
+    private val itemsRepository: ItemsRepository,
+    private val settingsManager: AppSettingsManager
 ) : ViewModel() {
 
     suspend fun deleteItem() {
@@ -60,6 +62,12 @@ class ItemDetailsViewModel(
                 started = SharingStarted.WhileSubscribed(TIMEOUT_MILLIS),
                 initialValue = ItemDetailsUiState()
             )
+
+    val shouldHideSensitiveData: Boolean
+        get() = settingsManager.hideSensitiveData
+
+    val isSharingDisabled: Boolean
+        get() = settingsManager.disableSharing
 
     companion object {
         private const val TIMEOUT_MILLIS = 5_000L
