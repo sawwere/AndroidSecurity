@@ -16,13 +16,17 @@
 
 package com.example.inventory.ui.item
 
-import androidx.compose.runtime.getValue
+import android.net.Uri
+import android.util.Log
+import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.example.inventory.data.AppSettingsManager
+import com.example.inventory.data.EncryptedFileManager
 import com.example.inventory.data.Item
 import com.example.inventory.data.ItemsRepository
+import kotlinx.coroutines.launch
 import java.text.NumberFormat
 
 /**
@@ -30,40 +34,61 @@ import java.text.NumberFormat
  */
 class ItemEntryViewModel(
     private val itemsRepository: ItemsRepository,
-    private val settingsManager: AppSettingsManager
+    private val settingsManager: AppSettingsManager,
+    private val encryptedFileManager: EncryptedFileManager
 ) : ViewModel() {
 
     /**
      * Holds current item ui state
      */
-    var itemUiState by mutableStateOf(ItemUiState())
-        private set
+    private val _itemUiState = mutableStateOf(ItemUiState())
+    val itemUiState: State<ItemUiState> get() = _itemUiState
 
     init {
         if (settingsManager.useDefaultQuantity) {
-            itemUiState = itemUiState.copy(
-                itemDetails = itemUiState.itemDetails.copy(quantity = settingsManager.defaultQuantity),
-                errors = itemUiState.errors
+            _itemUiState.value = _itemUiState.value.copy(
+                itemDetails = _itemUiState.value.itemDetails.copy(
+                    quantity = settingsManager.defaultQuantity
+                )
             )
         }
     }
 
     fun updateUiState(itemDetails: ItemDetails) {
-        itemUiState = ItemUiState(
+        _itemUiState.value = ItemUiState(
             itemDetails = itemDetails,
-            errors = emptyMap()
+            errors = validateInput(itemDetails)
         )
     }
 
     suspend fun saveItem(): Boolean {
-        val currentErrors = validateInput(itemUiState.itemDetails)
-        itemUiState = itemUiState.copy(errors = currentErrors)
+        val currentErrors = validateInput(_itemUiState.value.itemDetails)
+        _itemUiState.value = _itemUiState.value.copy(errors = currentErrors)
 
         return if (currentErrors.isEmpty()) {
-            itemsRepository.insertItem(itemUiState.itemDetails.toItem())
+            itemsRepository.insertItem(_itemUiState.value.itemDetails.toItem())
             true
         } else {
             false
+        }
+    }
+
+
+    /**
+     * Загружает товар из зашифрованного файла
+     */
+    fun loadItemFromFile(uri: Uri) {
+        viewModelScope.launch {
+            val item = encryptedFileManager.loadItemFromFile(uri)
+            if (item != null) {
+                val itemDetails = item.toItemDetails()
+                _itemUiState.value = ItemUiState(
+                    itemDetails = itemDetails,
+                    errors = validateInput(itemDetails)
+                )
+            } else {
+                Log.e("ItemEntryViewModel", "Failed to load item from file")
+            }
         }
     }
 }

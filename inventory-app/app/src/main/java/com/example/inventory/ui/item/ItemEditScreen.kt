@@ -24,6 +24,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalLayoutDirection
@@ -52,8 +53,8 @@ fun ItemEditScreen(
     modifier: Modifier = Modifier,
     viewModel: ItemEditViewModel = viewModel(factory = AppViewModelProvider.Factory)
 ) {
-
     val coroutineScope = rememberCoroutineScope()
+    val itemUiState by viewModel.itemUiState
 
     Scaffold(
         topBar = {
@@ -66,7 +67,7 @@ fun ItemEditScreen(
         modifier = modifier
     ) { innerPadding ->
         ItemEntryBody(
-            itemUiState = viewModel.itemUiState,
+            itemUiState = itemUiState,
             onItemValueChange = viewModel::updateUiState,
             onSaveClick = {
                 coroutineScope.launch {

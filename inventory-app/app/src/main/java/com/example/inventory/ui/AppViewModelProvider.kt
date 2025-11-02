@@ -45,9 +45,9 @@ object AppViewModelProvider {
         initializer {
             val container = inventoryApplication().container
             ItemEntryViewModel(
-
                 itemsRepository = container.itemsRepository,
-                settingsManager = container.settingsManager
+                settingsManager = container.settingsManager,
+                encryptedFileManager = container.encryptedFileManager
             )
         }
 
@@ -58,6 +58,7 @@ object AppViewModelProvider {
                 this.createSavedStateHandle(),
                 itemsRepository = container.itemsRepository,
                 settingsManager = container.settingsManager,
+                encryptedFileManager = container.encryptedFileManager
             )
         }
 

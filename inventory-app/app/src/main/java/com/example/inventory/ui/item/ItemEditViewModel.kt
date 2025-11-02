@@ -16,9 +16,8 @@
 
 package com.example.inventory.ui.item
 
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -38,29 +37,33 @@ class ItemEditViewModel(
     /**
      * Holds current item ui state
      */
-    var itemUiState by mutableStateOf(ItemUiState())
-        private set
+    private val _itemUiState = mutableStateOf(ItemUiState())
+    val itemUiState: State<ItemUiState> get() = _itemUiState
 
     private val itemId: Int = checkNotNull(savedStateHandle[ItemEditDestination.itemIdArg])
 
     init {
         viewModelScope.launch {
-            itemUiState = itemsRepository.getItemStream(itemId)
+            itemsRepository.getItemStream(itemId)
                 .filterNotNull()
                 .first()
                 .toItemUiState()
+                .let { loadedState ->
+                    _itemUiState.value = loadedState
+                }
         }
     }
+
 
     /**
      * Update the item in the [ItemsRepository]'s data source
      */
     suspend fun updateItem(): Boolean {
-        val currentErrors = validateInput(itemUiState.itemDetails)
-        itemUiState = itemUiState.copy(errors = currentErrors)
+        val currentErrors = validateInput(_itemUiState.value.itemDetails)
+        _itemUiState.value = _itemUiState.value.copy(errors = currentErrors)
 
         return if (currentErrors.isEmpty()) {
-            itemsRepository.insertItem(itemUiState.itemDetails.toItem())
+            itemsRepository.updateItem(_itemUiState.value.itemDetails.toItem())
             true
         } else {
             false
@@ -72,7 +75,9 @@ class ItemEditViewModel(
      * a validation for input values.
      */
     fun updateUiState(itemDetails: ItemDetails) {
-        itemUiState =
-            ItemUiState(itemDetails = itemDetails, errors = validateInput(itemDetails))
+        _itemUiState.value = ItemUiState(
+            itemDetails = itemDetails,
+            errors = validateInput(itemDetails)
+        )
     }
 }

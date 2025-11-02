@@ -51,4 +51,5 @@
     <string name="hides_supplier_info">Hides the supplier\'s data in the details view</string>
     <string name="hide_supplier_info">Hide sensitive data</string>
     <string name="sharing_is_disabled_text">Sending data is disabled in the application settings.</string>
+    <string name="save_to_file">Save to file</string>
 </resources>

@@ -24,6 +24,7 @@ import android.content.Context
 interface AppContainer {
     val itemsRepository: ItemsRepository
     val settingsManager: AppSettingsManager
+    val encryptedFileManager: EncryptedFileManager
 }
 
 /**
@@ -39,5 +40,9 @@ class AppDataContainer(private val context: Context) : AppContainer {
 
     override val settingsManager: AppSettingsManager by lazy {
         AppSettingsManager(context)
+    }
+
+    override val encryptedFileManager: EncryptedFileManager by lazy {
+        EncryptedFileManager(context)
     }
 }

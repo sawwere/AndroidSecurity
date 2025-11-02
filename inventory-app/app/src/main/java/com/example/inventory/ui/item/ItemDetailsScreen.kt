@@ -32,6 +32,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Create
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.AlertDialog
@@ -90,6 +91,14 @@ fun ItemDetailsScreen(
     val uiState = viewModel.uiState.collectAsState()
     val coroutineScope = rememberCoroutineScope()
 
+    val saveFileLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.CreateDocument("application/octet-stream")
+    ) { uri ->
+        if (uri != null) {
+            viewModel.saveItemToFile(uri)
+        }
+    }
+
     Scaffold(
         topBar = {
             InventoryTopAppBar(
@@ -120,6 +129,11 @@ fun ItemDetailsScreen(
                     navigateBack()
                 }
             },
+            onSaveToFile = {
+                val item = uiState.value.itemDetails.toItem()
+                val fileName = viewModel.generateFileName(item)
+                saveFileLauncher.launch(fileName)
+            },
             shouldHideSensitiveData = viewModel.shouldHideSensitiveData,
             isSharingDisabled = viewModel.isSharingDisabled,
             modifier = Modifier
@@ -138,6 +152,7 @@ private fun ItemDetailsBody(
     itemDetailsUiState: ItemDetailsUiState,
     onSellItem: () -> Unit,
     onDelete: () -> Unit,
+    onSaveToFile: () -> Unit,
     shouldHideSensitiveData: Boolean,
     isSharingDisabled: Boolean,
     modifier: Modifier = Modifier
@@ -170,6 +185,7 @@ private fun ItemDetailsBody(
         ) {
             Text(stringResource(R.string.sell))
         }
+        // Sharing
         OutlinedButton(
             enabled = !isSharingDisabled,
             onClick = {
@@ -202,6 +218,22 @@ private fun ItemDetailsBody(
                 modifier = Modifier.padding(top = 4.dp)
             )
         }
+        // Save to file
+        OutlinedButton(
+            onClick = onSaveToFile,
+            shape = MaterialTheme.shapes.small,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Icon(
+                imageVector = Icons.Default.Create,
+                contentDescription = "Save to file",
+                modifier = Modifier.size(ButtonDefaults.IconSize)
+            )
+            Spacer(Modifier.size(ButtonDefaults.IconSpacing))
+            Text(stringResource(R.string.save_to_file))
+        }
+
+        // Delete
         OutlinedButton(
             onClick = { deleteConfirmationRequired = true },
             shape = MaterialTheme.shapes.small,
@@ -332,6 +364,7 @@ fun ItemDetailsScreenPreview() {
             ),
             onSellItem = {},
             onDelete = {},
+            onSaveToFile = {},
             shouldHideSensitiveData = false,
             isSharingDisabled = true,
         )
