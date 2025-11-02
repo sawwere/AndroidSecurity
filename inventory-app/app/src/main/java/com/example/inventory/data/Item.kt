@@ -20,6 +20,11 @@ import androidx.room.Entity
 import androidx.room.PrimaryKey
 
 
+enum class ItemSource {
+    MANUAL,
+    FILE
+}
+
 /**
  * Entity data class represents a single row in the database.
  */
@@ -33,5 +38,6 @@ data class Item(
     val supplierName: String,
     val supplierPhone: String,
     val supplierEmail: String,
+    val source: ItemSource = ItemSource.MANUAL,
 )
 

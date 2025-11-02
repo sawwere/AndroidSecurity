@@ -17,6 +17,7 @@
 package com.example.inventory.ui.item
 
 import androidx.compose.runtime.State
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
@@ -75,8 +76,9 @@ class ItemEditViewModel(
      * a validation for input values.
      */
     fun updateUiState(itemDetails: ItemDetails) {
+        val originalSource = _itemUiState.value.itemDetails.source
         _itemUiState.value = ItemUiState(
-            itemDetails = itemDetails,
+            itemDetails = itemDetails.copy(source = originalSource),
             errors = validateInput(itemDetails)
         )
     }

@@ -66,6 +66,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.inventory.InventoryTopAppBar
 import com.example.inventory.R
 import com.example.inventory.data.Item
+import com.example.inventory.data.ItemSource
 import com.example.inventory.ui.AppViewModelProvider
 import com.example.inventory.ui.navigation.NavigationDestination
 import com.example.inventory.ui.theme.InventoryTheme
@@ -317,6 +318,11 @@ fun ItemDetails(
                     horizontal = dimensionResource(id = R.dimen.padding_medium)
                 )
             )
+            ItemDetailsRow(
+                labelResID = R.string.data_source,
+                itemDetail = getSourceDisplayName(item.source),
+                modifier = Modifier.padding(horizontal = dimensionResource(id = R.dimen.padding_medium))
+            )
         }
     }
 }
@@ -353,6 +359,15 @@ private fun DeleteConfirmationDialog(
             }
         })
 }
+
+private fun getSourceDisplayName(source: ItemSource): String {
+    return when (source) {
+        ItemSource.MANUAL -> "Ручное заполнение"
+        ItemSource.FILE -> "Загрузка из файла"
+    }
+}
+
+
 @Preview(showBackground = true)
 @Composable
 fun ItemDetailsScreenPreview() {

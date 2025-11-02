@@ -38,4 +38,5 @@
     <string name="hide_supplier_info">Скрыть чувствительные данные</string>
     <string name="sharing_is_disabled_text">Отправка данных запрещена в настройках приложения</string>
     <string name="save_to_file">Сохранить в файл</string>
+    <string name="data_source">Источник данных</string>
 </resources>

@@ -52,4 +52,5 @@
     <string name="hide_supplier_info">Hide sensitive data</string>
     <string name="sharing_is_disabled_text">Sending data is disabled in the application settings.</string>
     <string name="save_to_file">Save to file</string>
+    <string name="data_source">Data source</string>
 </resources>

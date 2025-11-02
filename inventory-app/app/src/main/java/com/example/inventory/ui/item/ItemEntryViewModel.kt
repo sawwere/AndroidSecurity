@@ -25,6 +25,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.inventory.data.AppSettingsManager
 import com.example.inventory.data.EncryptedFileManager
 import com.example.inventory.data.Item
+import com.example.inventory.data.ItemSource
 import com.example.inventory.data.ItemsRepository
 import kotlinx.coroutines.launch
 import java.text.NumberFormat
@@ -55,8 +56,12 @@ class ItemEntryViewModel(
     }
 
     fun updateUiState(itemDetails: ItemDetails) {
+        val originalSource = _itemUiState.value.itemDetails.source
         _itemUiState.value = ItemUiState(
-            itemDetails = itemDetails,
+            itemDetails = itemDetails.copy(
+                // нельзя изменять источник через UI
+                source = originalSource
+            ),
             errors = validateInput(itemDetails)
         )
     }
@@ -81,7 +86,10 @@ class ItemEntryViewModel(
         viewModelScope.launch {
             val item = encryptedFileManager.loadItemFromFile(uri)
             if (item != null) {
-                val itemDetails = item.toItemDetails()
+                val itemDetails = item.toItemDetails().copy(
+                    source = ItemSource.FILE,
+                    id = 0
+                )
                 _itemUiState.value = ItemUiState(
                     itemDetails = itemDetails,
                     errors = validateInput(itemDetails)
@@ -109,6 +117,7 @@ data class ItemDetails(
     val supplierName: String = "",
     val supplierPhone: String = "",
     val supplierEmail: String = "",
+    val source: ItemSource = ItemSource.MANUAL,
 )
 
 /**
@@ -123,7 +132,8 @@ fun ItemDetails.toItem(): Item = Item(
     quantity = quantity.toIntOrNull() ?: 0,
     supplierName = supplierName,
     supplierEmail = supplierEmail,
-    supplierPhone = supplierPhone
+    supplierPhone = supplierPhone,
+    source = source
 )
 
 fun Item.formatedPrice(): String {
@@ -148,5 +158,6 @@ fun Item.toItemDetails(): ItemDetails = ItemDetails(
     quantity = quantity.toString(),
     supplierName = supplierName,
     supplierEmail = supplierEmail,
-    supplierPhone = supplierPhone
+    supplierPhone = supplierPhone,
+    source = source
 )
