@@ -22,6 +22,7 @@ import android.content.Context
  * App container for Dependency injection.
  */
 interface AppContainer {
+    val keyStoreManager: KeyStoreManager
     val itemsRepository: ItemsRepository
     val settingsManager: AppSettingsManager
     val encryptedFileManager: EncryptedFileManager
@@ -31,11 +32,15 @@ interface AppContainer {
  * [AppContainer] implementation that provides instance of [OfflineItemsRepository]
  */
 class AppDataContainer(private val context: Context) : AppContainer {
+    override val keyStoreManager: KeyStoreManager by lazy {
+        KeyStoreManager(context)
+    }
+
     /**
      * Implementation for [ItemsRepository]
      */
     override val itemsRepository: ItemsRepository by lazy {
-        OfflineItemsRepository(InventoryDatabase.getDatabase(context).itemDao())
+        OfflineItemsRepository(InventoryDatabase.getDatabase(context, keyStoreManager.getDatabaseKey()).itemDao())
     }
 
     override val settingsManager: AppSettingsManager by lazy {

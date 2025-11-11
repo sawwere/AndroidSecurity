@@ -6,6 +6,8 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
+import com.commonsware.cwac.saferoom.SQLCipherUtils
+import net.sqlcipher.database.SupportFactory
 
 @Database(entities = [Item::class], version = 2, exportSchema = false)
 abstract class InventoryDatabase : RoomDatabase() {
@@ -15,9 +17,19 @@ abstract class InventoryDatabase : RoomDatabase() {
         @Volatile
         private var Instance: InventoryDatabase? = null
 
-        fun getDatabase(context: Context): InventoryDatabase {
+        private const val DATABASE_NAME = "item_database"
+
+        fun getDatabase(context: Context, key: ByteArray): InventoryDatabase {
             return Instance ?: synchronized(this) {
-                Room.databaseBuilder(context, InventoryDatabase::class.java, "item_database")
+                val databaseState = SQLCipherUtils.getDatabaseState(context, DATABASE_NAME)
+                if (databaseState == SQLCipherUtils.State.UNENCRYPTED) {
+                    SQLCipherUtils.encrypt(context, DATABASE_NAME, key)
+                }
+
+                val factory = SupportFactory(key)
+
+                Room.databaseBuilder(context, InventoryDatabase::class.java, DATABASE_NAME)
+                    .openHelperFactory(factory)
                     .addMigrations(MIGRATION_1_2)
                     .build()
                     .also { Instance = it }

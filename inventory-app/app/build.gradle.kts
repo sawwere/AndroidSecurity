@@ -86,6 +86,9 @@ dependencies {
     ksp("androidx.room:room-compiler:${rootProject.extra["room_version"]}")
     implementation("androidx.room:room-ktx:${rootProject.extra["room_version"]}")
 
+    implementation("net.zetetic:android-database-sqlcipher:4.5.3")
+    implementation("com.commonsware.cwac:saferoom:1.2.1")
+
     implementation("com.google.code.gson:gson:2.10.1")
 
 }

@@ -28,6 +28,9 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
+        maven {
+            setUrl("https://s3.amazonaws.com/repo.commonsware.com")
+        }
     }
 }
 rootProject.name = "Inventory"
