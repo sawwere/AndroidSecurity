@@ -1,41 +1,84 @@
 package com.sawwere.tageditor.ui.edit
 
-import com.sawwere.tageditor.data.ExifData
-import android.net.Uri
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.Checkbox
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
-import com.sawwere.tageditor.data.ExifUtils
+import com.sawwere.tageditor.ui.AppViewModelProvider
+import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EditScreen(
     navController: NavHostController,
-    imageUri: String
+    editViewModel: EditViewModel = viewModel(factory = AppViewModelProvider.Factory)
 ) {
-    val context = LocalContext.current
-    var exifData by remember { mutableStateOf(ExifData()) }
-    var saveSuccess by remember { mutableStateOf<Boolean?>(null) }
-    var saveAsCopy by remember { mutableStateOf(true) }
+    val state by editViewModel.state.collectAsStateWithLifecycle()
 
-    LaunchedEffect(imageUri) {
-        exifData = ExifUtils.readExifData(context, Uri.parse(imageUri))
+    // Загружаем данные изображения при входе на экран
+    LaunchedEffect(Unit) {
+        editViewModel.loadImageData()
+    }
+
+    LaunchedEffect(state.saveSuccess) {
+        if (state.saveSuccess == true) {
+            delay(1000)
+            navController.popBackStack()
+        }
     }
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text("Редактор EXIF тегов") },
+            CenterAlignedTopAppBar(
+                title = {
+                    Text(
+                        "Редактор EXIF",
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
-                        Text("Назад")
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Назад"
+                        )
                     }
                 }
             )
@@ -48,51 +91,79 @@ fun EditScreen(
                 .padding(16.dp)
                 .verticalScroll(rememberScrollState())
         ) {
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 16.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant
-                )
-            ) {
-                Row(
-                    modifier = Modifier.padding(16.dp),
-                    verticalAlignment = Alignment.CenterVertically
+            if (state.imageUri.isBlank()) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
                 ) {
-                    Checkbox(
-                        checked = saveAsCopy,
-                        onCheckedChange = { saveAsCopy = it }
+                    Text(
+                        "Изображение не выбрано",
+                        style = MaterialTheme.typography.bodyLarge,
+                        modifier = Modifier.padding(bottom = 16.dp)
                     )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Column {
-                        Text(
-                            "Сохранить как копию",
-                            style = MaterialTheme.typography.bodyMedium
-                        )
-                        Text(
-                            "Рекомендуется для сохранения исходного файла",
-                            style = MaterialTheme.typography.bodySmall
-                        )
+                    Text(
+                        "Вернитесь на главный экран и выберите изображение",
+                        style = MaterialTheme.typography.bodyMedium,
+                        modifier = Modifier.padding(bottom = 24.dp)
+                    )
+                    Button(
+                        onClick = { navController.popBackStack() }
+                    ) {
+                        Text("Вернуться к выбору")
                     }
+                }
+                return@Column
+            }
+
+            if (state.isLoading) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(32.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    CircularProgressIndicator()
+                    Text(
+                        "Загрузка...",
+                        modifier = Modifier.padding(top = 16.dp)
+                    )
                 }
             }
 
-            saveSuccess?.let { success ->
+            if (state.isSaving) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    LinearProgressIndicator(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 16.dp)
+                    )
+                    Text("Сохранение...")
+                }
+            }
+
+            state.saveSuccess?.let { success ->
                 AlertDialog(
-                    onDismissRequest = { saveSuccess = null },
+                    onDismissRequest = { editViewModel.clearSaveStatus() },
                     title = { Text(if (success) "Успех" else "Ошибка") },
                     text = {
                         Text(
                             if (success)
                                 "Изменения успешно сохранены!"
                             else
-                                "Ошибка при сохранении. Попробуйте сохранить как копию."
+                                state.error ?: "Ошибка при сохранении"
                         )
                     },
                     confirmButton = {
                         Button(onClick = {
-                            saveSuccess = null
+                            editViewModel.clearSaveStatus()
                             if (success) {
                                 navController.popBackStack()
                             }
@@ -103,93 +174,137 @@ fun EditScreen(
                 )
             }
 
-            OutlinedTextField(
-                value = exifData.dateTime,
-                onValueChange = { exifData = exifData.copy(dateTime = it) },
-                label = { Text("Дата создания (формат: YYYY:MM:DD HH:MM:SS)") },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 8.dp)
-            )
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                OutlinedTextField(
-                    value = exifData.latitude?.toString() ?: "",
-                    onValueChange = {
-                        exifData = exifData.copy(latitude = it.toDoubleOrNull())
-                    },
-                    label = { Text("Широта") },
-                    modifier = Modifier.weight(1f)
-                )
-
-                OutlinedTextField(
-                    value = exifData.longitude?.toString() ?: "",
-                    onValueChange = {
-                        exifData = exifData.copy(longitude = it.toDoubleOrNull())
-                    },
-                    label = { Text("Долгота") },
-                    modifier = Modifier.weight(1f)
+            state.error?.let { error ->
+                AlertDialog(
+                    onDismissRequest = { editViewModel.clearError() },
+                    title = { Text("Ошибка") },
+                    text = { Text(error) },
+                    confirmButton = {
+                        Button(onClick = { editViewModel.clearError() }) {
+                            Text("OK")
+                        }
+                    }
                 )
             }
 
-            Spacer(modifier = Modifier.height(8.dp))
-
-            OutlinedTextField(
-                value = exifData.make,
-                onValueChange = { exifData = exifData.copy(make = it) },
-                label = { Text("Устройство создания") },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 8.dp)
-            )
-
-            OutlinedTextField(
-                value = exifData.model,
-                onValueChange = { exifData = exifData.copy(model = it) },
-                label = { Text("Модель устройства") },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 16.dp)
-            )
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                Button(
-                    onClick = { navController.popBackStack() },
-                    modifier = Modifier.weight(1f),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.secondary
+            // Показываем форму редактирования только если не загружается и есть данные
+            if (!state.isLoading && state.imageUri.isNotBlank()) {
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 16.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant
                     )
                 ) {
-                    Text("Отмена")
-                }
-
-                Button(
-                    onClick = {
-                        val success = if (saveAsCopy) {
-                            val newUri = ExifUtils.saveExifDataAsCopy(
-                                context,
-                                Uri.parse(imageUri),
-                                exifData
+                    Row(
+                        modifier = Modifier.padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Checkbox(
+                            checked = state.saveAsCopy,
+                            onCheckedChange = {
+                                editViewModel.setSaveAsCopy(it)
+                            }
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Column {
+                            Text(
+                                "Сохранить как копию",
+                                style = MaterialTheme.typography.bodyMedium
                             )
-                            newUri != null
-                        } else {
-                            ExifUtils.saveExifData(
-                                context,
-                                Uri.parse(imageUri),
-                                exifData
+                            Text(
+                                "Рекомендуется для сохранения исходного файла",
+                                style = MaterialTheme.typography.bodySmall
                             )
                         }
-                        saveSuccess = success
+                    }
+                }
+
+                OutlinedTextField(
+                    value = state.exifData.dateTime,
+                    onValueChange = {
+                        editViewModel.updateDateTime(it)
                     },
-                    modifier = Modifier.weight(1f)
+                    label = { Text("Дата создания") },
+                    placeholder = { Text("YYYY:MM:DD HH:MM:SS") },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 8.dp)
+                )
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Text("Сохранить")
+                    OutlinedTextField(
+                        value = state.exifData.latitude?.toString() ?: "",
+                        onValueChange = {
+                            editViewModel.updateLatitude(it)
+                        },
+                        label = { Text("Широта") },
+                        placeholder = { Text("00.000000") },
+                        modifier = Modifier.weight(1f)
+                    )
+
+                    OutlinedTextField(
+                        value = state.exifData.longitude?.toString() ?: "",
+                        onValueChange = {
+                            editViewModel.updateLongitude(it)
+                        },
+                        label = { Text("Долгота") },
+                        placeholder = { Text("00.000000") },
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                OutlinedTextField(
+                    value = state.exifData.make,
+                    onValueChange = {
+                        editViewModel.updateMake(it)
+                    },
+                    label = { Text("Устройство создания") },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 8.dp)
+                )
+
+                OutlinedTextField(
+                    value = state.exifData.model,
+                    onValueChange = {
+                        editViewModel.updateModel(it)
+                    },
+                    label = { Text("Модель устройства") },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 16.dp)
+                )
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    Button(
+                        onClick = { navController.popBackStack() },
+                        modifier = Modifier.weight(1f),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.secondary
+                        )
+                    ) {
+                        Text("Отмена")
+                    }
+
+                    Button(
+                        onClick = {
+                            editViewModel.saveExifData()
+                        },
+                        modifier = Modifier.weight(1f),
+                        enabled = !state.isSaving
+                    ) {
+                        Text("Сохранить")
+                    }
                 }
             }
         }

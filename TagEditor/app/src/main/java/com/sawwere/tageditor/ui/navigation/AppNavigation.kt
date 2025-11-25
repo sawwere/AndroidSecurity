@@ -11,9 +11,7 @@ import com.sawwere.tageditor.ui.main.MainScreen
 
 sealed class Screen(val route: String) {
     object Main : Screen("main")
-    object Edit : Screen("edit/{imageUri}") {
-        fun createRoute(imageUri: String) = "edit/$imageUri"
-    }
+    object Edit : Screen("edit")
 }
 
 @Composable
@@ -26,15 +24,8 @@ fun AppNavigation(navController: NavHostController) {
             MainScreen(navController = navController)
         }
 
-        composable(
-            route = Screen.Edit.route,
-            arguments = listOf(navArgument("imageUri") { type = NavType.StringType })
-        ) { backStackEntry ->
-            val imageUri = backStackEntry.arguments?.getString("imageUri") ?: ""
-            EditScreen(
-                navController = navController,
-                imageUri = imageUri
-            )
+        composable(Screen.Edit.route) {
+            EditScreen(navController = navController)
         }
     }
 }

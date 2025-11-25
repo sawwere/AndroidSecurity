@@ -6,12 +6,12 @@ plugins {
 
 android {
     namespace = "com.sawwere.tageditor"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "com.sawwere.tageditor"
         minSdk = 33
-        targetSdk = 34
+        targetSdk = 35
         versionCode = 1
         versionName = "1.0"
 
@@ -50,11 +50,12 @@ dependencies {
     implementation(libs.androidx.activity.compose.v182)
 
     // Compose
-    implementation(platform("androidx.compose:compose-bom:2024.02.02"))
+    implementation(platform(libs.androidx.compose.bom.v20251101))
+    implementation(libs.androidx.compose.material3.material3)
     implementation(libs.ui)
     implementation(libs.ui.graphics)
     implementation(libs.ui.tooling.preview)
-    implementation(libs.material3)
+    implementation("androidx.compose.material:material-icons-core")
 
     // Navigation
     implementation(libs.androidx.navigation.compose.v276)
@@ -64,12 +65,12 @@ dependencies {
 
     // EXIF handling
     implementation(libs.androidx.exifinterface.v136)
+    implementation(libs.androidx.lifecycle.runtime.compose.android)
 
     // Testing
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit.v115)
     androidTestImplementation(libs.androidx.espresso.core.v351)
-    androidTestImplementation(libs.compose.bom.v20240202)
     androidTestImplementation(libs.ui.test.junit4)
 
     debugImplementation(libs.ui.tooling)
