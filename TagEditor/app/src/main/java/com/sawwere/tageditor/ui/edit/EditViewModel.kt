@@ -3,7 +3,6 @@ package com.sawwere.tageditor.ui.edit
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.sawwere.tageditor.data.ExifRepository
-import com.sawwere.tageditor.ui.SharedState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -17,14 +16,8 @@ class EditViewModel(
     private val _state = MutableStateFlow(EditState())
     val state: StateFlow<EditState> = _state.asStateFlow()
 
-    fun loadImageData() {
-        val imageUri = SharedState.selectedImageUri
-        if (imageUri == null) {
-            _state.update { it.copy(error = "No image selected") }
-            return
-        }
-
-        _state.update { it.copy(imageUri = imageUri, isLoading = true) }
+    fun loadImageData(imageUri: String) {
+        _state.update { it.copy(isLoading = true) }
         viewModelScope.launch {
             try {
                 val exifData = exifRepository.readExifData(android.net.Uri.parse(imageUri))
@@ -76,34 +69,16 @@ class EditViewModel(
         }
     }
 
-    fun setSaveAsCopy(saveAsCopy: Boolean) {
-        _state.update { it.copy(saveAsCopy = saveAsCopy) }
-    }
-
-    fun saveExifData() {
-        val state = _state.value
-        if (state.imageUri.isBlank()) {
-            _state.update { it.copy(error = "No image selected") }
-            return
-        }
-
+    fun saveExifData(originalImageUri: String) {
         _state.update { it.copy(isSaving = true) }
-
         viewModelScope.launch {
             try {
-                val success = if (state.saveAsCopy) {
-                    val newUri = exifRepository.saveExifDataAsCopy(
-                        android.net.Uri.parse(state.imageUri),
-                        state.exifData
-                    )
-                    newUri != null
-                } else {
-                    exifRepository.saveExifData(
-                        android.net.Uri.parse(state.imageUri),
-                        state.exifData
-                    )
-                }
+                val newUri = exifRepository.saveExifDataAsCopy(
+                    android.net.Uri.parse(originalImageUri),
+                    _state.value.exifData
+                )
 
+                val success = newUri != null
                 _state.update {
                     it.copy(
                         isSaving = false,
@@ -123,11 +98,11 @@ class EditViewModel(
         }
     }
 
-    fun clearSaveStatus() {
-        _state.update { it.copy(saveSuccess = null) }
-    }
-
     fun clearError() {
         _state.update { it.copy(error = null) }
+    }
+
+    fun clearSaveStatus() {
+        _state.update { it.copy(saveSuccess = null) }
     }
 }

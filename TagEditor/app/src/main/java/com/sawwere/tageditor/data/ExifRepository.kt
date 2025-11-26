@@ -5,12 +5,9 @@ import android.content.Context
 import android.net.Uri
 import android.provider.MediaStore
 import androidx.exifinterface.media.ExifInterface
-import java.io.File
-import java.io.FileOutputStream
 
 interface ExifRepository {
     suspend fun readExifData(uri: Uri): ExifData
-    suspend fun saveExifData(uri: Uri, exifData: ExifData): Boolean
     suspend fun saveExifDataAsCopy(originalUri: Uri, exifData: ExifData): Uri?
 }
 
@@ -21,10 +18,16 @@ class ExifRepositoryImpl(private val context: Context) : ExifRepository {
             context.contentResolver.openInputStream(uri)?.use { inputStream ->
                 val exif = ExifInterface(inputStream)
 
+                val latitudeStr = exif.getAttribute(ExifInterface.TAG_GPS_LATITUDE)
+                val longitudeStr = exif.getAttribute(ExifInterface.TAG_GPS_LONGITUDE)
+
+                val latitude = latitudeStr?.toDoubleOrNull()
+                val longitude = longitudeStr?.toDoubleOrNull()
+
                 ExifData(
                     dateTime = exif.getAttribute(ExifInterface.TAG_DATETIME) ?: "",
-                    latitude = exif.getAttribute(ExifInterface.TAG_GPS_LATITUDE)?.toDouble(),
-                    longitude = exif.getAttribute(ExifInterface.TAG_GPS_LONGITUDE)?.toDouble(),
+                    latitude = if (latitude == 0.0) null else latitude,
+                    longitude = if (longitude == 0.0) null else longitude,
                     make = exif.getAttribute(ExifInterface.TAG_MAKE) ?: "",
                     model = exif.getAttribute(ExifInterface.TAG_MODEL) ?: ""
                 )
@@ -35,15 +38,57 @@ class ExifRepositoryImpl(private val context: Context) : ExifRepository {
         }
     }
 
-    override suspend fun saveExifData(uri: Uri, exifData: ExifData): Boolean {
+    override suspend fun saveExifDataAsCopy(originalUri: Uri, exifData: ExifData): Uri? {
         return try {
-            val tempFile = File.createTempFile("exif_edit", ".jpg", context.cacheDir)
+            val contentValues = ContentValues().apply {
+                put(MediaStore.Images.Media.DISPLAY_NAME, "edited_${System.currentTimeMillis()}.jpg")
+                put(MediaStore.Images.Media.MIME_TYPE, "image/jpeg")
+                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
+                    put(MediaStore.Images.Media.RELATIVE_PATH, "Pictures/EXIFEditor")
+                }
+            }
 
-            context.contentResolver.openInputStream(uri)?.use { inputStream ->
-                FileOutputStream(tempFile).use { outputStream ->
+            val collection = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
+                MediaStore.Images.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
+            } else {
+                MediaStore.Images.Media.EXTERNAL_CONTENT_URI
+            }
+
+            val newUri = context.contentResolver.insert(collection, contentValues) ?: return null
+
+            copyImageWithExif(originalUri, newUri, exifData)
+            newUri
+
+        } catch (e: Exception) {
+            e.printStackTrace()
+            null
+        }
+    }
+
+    private fun copyImageWithExif(sourceUri: Uri, destUri: Uri, exifData: ExifData) {
+        try {
+            context.contentResolver.openInputStream(sourceUri)?.use { inputStream ->
+                context.contentResolver.openOutputStream(destUri)?.use { outputStream ->
                     inputStream.copyTo(outputStream)
                 }
             }
+
+            updateExifInUri(destUri, exifData)
+
+        } catch (e: Exception) {
+            e.printStackTrace()
+            throw e
+        }
+    }
+
+    private fun updateExifInUri(uri: Uri, exifData: ExifData) {
+        try {
+            val inputStream = context.contentResolver.openInputStream(uri) ?: return
+            val tempData = inputStream.use { it.readBytes() }
+            inputStream.close()
+
+            val tempFile = java.io.File.createTempFile("exif_temp", ".jpg")
+            tempFile.writeBytes(tempData)
 
             val exif = ExifInterface(tempFile)
             updateExifAttributes(exif, exifData)
@@ -56,49 +101,9 @@ class ExifRepositoryImpl(private val context: Context) : ExifRepository {
             }
 
             tempFile.delete()
-            true
+
         } catch (e: Exception) {
             e.printStackTrace()
-            false
-        }
-    }
-
-    override suspend fun saveExifDataAsCopy(originalUri: Uri, exifData: ExifData): Uri? {
-        return try {
-            val contentValues = ContentValues().apply {
-                put(MediaStore.Images.Media.DISPLAY_NAME, "edited_${System.currentTimeMillis()}.jpg")
-                put(MediaStore.Images.Media.MIME_TYPE, "image/jpeg")
-                put(MediaStore.Images.Media.RELATIVE_PATH, "Pictures/EXIFEditor")
-            }
-
-            val collection = MediaStore.Images.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
-            val newUri = context.contentResolver.insert(collection, contentValues)
-
-            newUri?.let { uri ->
-                val tempFile = File.createTempFile("exif_edit", ".jpg", context.cacheDir)
-
-                context.contentResolver.openInputStream(originalUri)?.use { inputStream ->
-                    FileOutputStream(tempFile).use { outputStream ->
-                        inputStream.copyTo(outputStream)
-                    }
-
-                    val exif = ExifInterface(tempFile)
-                    updateExifAttributes(exif, exifData)
-                    exif.saveAttributes()
-
-                    context.contentResolver.openOutputStream(uri)?.use { finalOutputStream ->
-                        tempFile.inputStream().use { tempInput ->
-                            tempInput.copyTo(finalOutputStream)
-                        }
-                    }
-                }
-
-                tempFile.delete()
-                uri
-            }
-        } catch (e: Exception) {
-            e.printStackTrace()
-            null
         }
     }
 

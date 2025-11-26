@@ -23,17 +23,6 @@ class MainViewModel(
         loadExifData(uri)
     }
 
-    fun clearImage() {
-        SharedState.selectedImageUri = null
-        _state.update {
-            it.copy(
-                selectedImageUri = null,
-                exifData = null,
-                error = null
-            )
-        }
-    }
-
     fun clearError() {
         _state.update { it.copy(error = null) }
     }

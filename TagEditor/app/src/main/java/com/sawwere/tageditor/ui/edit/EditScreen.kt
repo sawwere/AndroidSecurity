@@ -4,20 +4,26 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
-import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -27,9 +33,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -47,13 +50,13 @@ import kotlinx.coroutines.delay
 @Composable
 fun EditScreen(
     navController: NavHostController,
+    imageUri: String,
     editViewModel: EditViewModel = viewModel(factory = AppViewModelProvider.Factory)
 ) {
     val state by editViewModel.state.collectAsStateWithLifecycle()
 
-    // Загружаем данные изображения при входе на экран
-    LaunchedEffect(Unit) {
-        editViewModel.loadImageData()
+    LaunchedEffect(imageUri) {
+        editViewModel.loadImageData(imageUri)
     }
 
     LaunchedEffect(state.saveSuccess) {
@@ -76,11 +79,14 @@ fun EditScreen(
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            imageVector = Icons.Default.ArrowBack,
                             contentDescription = "Назад"
                         )
                     }
-                }
+                },
+                modifier = Modifier
+                    .statusBarsPadding()
+                    .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal))
             )
         }
     ) { innerPadding ->
@@ -91,46 +97,12 @@ fun EditScreen(
                 .padding(16.dp)
                 .verticalScroll(rememberScrollState())
         ) {
-            if (state.imageUri.isBlank()) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(16.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center
-                ) {
-                    Text(
-                        "Изображение не выбрано",
-                        style = MaterialTheme.typography.bodyLarge,
-                        modifier = Modifier.padding(bottom = 16.dp)
-                    )
-                    Text(
-                        "Вернитесь на главный экран и выберите изображение",
-                        style = MaterialTheme.typography.bodyMedium,
-                        modifier = Modifier.padding(bottom = 24.dp)
-                    )
-                    Button(
-                        onClick = { navController.popBackStack() }
-                    ) {
-                        Text("Вернуться к выбору")
-                    }
-                }
-                return@Column
-            }
-
             if (state.isLoading) {
-                Column(
+                CircularProgressIndicator(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(32.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    CircularProgressIndicator()
-                    Text(
-                        "Загрузка...",
-                        modifier = Modifier.padding(top = 16.dp)
-                    )
-                }
+                        .align(Alignment.CenterHorizontally)
+                        .padding(16.dp)
+                )
             }
 
             if (state.isSaving) {
@@ -145,7 +117,7 @@ fun EditScreen(
                             .fillMaxWidth()
                             .padding(bottom = 16.dp)
                     )
-                    Text("Сохранение...")
+                    Text("Создание копии с новыми EXIF данными...")
                 }
             }
 
@@ -156,7 +128,7 @@ fun EditScreen(
                     text = {
                         Text(
                             if (success)
-                                "Изменения успешно сохранены!"
+                                "Копия изображения с новыми EXIF данными успешно сохранена в галерее!"
                             else
                                 state.error ?: "Ошибка при сохранении"
                         )
@@ -187,124 +159,99 @@ fun EditScreen(
                 )
             }
 
-            // Показываем форму редактирования только если не загружается и есть данные
-            if (!state.isLoading && state.imageUri.isNotBlank()) {
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 16.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceVariant
-                    )
-                ) {
-                    Row(
-                        modifier = Modifier.padding(16.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Checkbox(
-                            checked = state.saveAsCopy,
-                            onCheckedChange = {
-                                editViewModel.setSaveAsCopy(it)
-                            }
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Column {
-                            Text(
-                                "Сохранить как копию",
-                                style = MaterialTheme.typography.bodyMedium
-                            )
-                            Text(
-                                "Рекомендуется для сохранения исходного файла",
-                                style = MaterialTheme.typography.bodySmall
-                            )
-                        }
-                    }
-                }
-
-                OutlinedTextField(
-                    value = state.exifData.dateTime,
-                    onValueChange = {
-                        editViewModel.updateDateTime(it)
-                    },
-                    label = { Text("Дата создания") },
-                    placeholder = { Text("YYYY:MM:DD HH:MM:SS") },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 8.dp)
+            // Информация о сохранении
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 16.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant
                 )
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp)
                 ) {
-                    OutlinedTextField(
-                        value = state.exifData.latitude?.toString() ?: "",
-                        onValueChange = {
-                            editViewModel.updateLatitude(it)
-                        },
-                        label = { Text("Широта") },
-                        placeholder = { Text("00.000000") },
-                        modifier = Modifier.weight(1f)
+                    Text(
+                        "Изображение будет сохранено как копия",
+                        style = MaterialTheme.typography.bodyMedium
                     )
-
-                    OutlinedTextField(
-                        value = state.exifData.longitude?.toString() ?: "",
-                        onValueChange = {
-                            editViewModel.updateLongitude(it)
-                        },
-                        label = { Text("Долгота") },
-                        placeholder = { Text("00.000000") },
-                        modifier = Modifier.weight(1f)
+                    Text(
+                        "Исходное изображение останется неизменным. Новая копия с обновленными EXIF данными будет сохранена в галерее.",
+                        style = MaterialTheme.typography.bodySmall,
+                        modifier = Modifier.padding(top = 8.dp)
                     )
                 }
+            }
 
-                Spacer(modifier = Modifier.height(8.dp))
+            OutlinedTextField(
+                value = state.exifData.dateTime,
+                onValueChange = { editViewModel.updateDateTime(it) },
+                label = { Text("Дата создания (YYYY:MM:DD HH:MM:SS)") },
+                placeholder = { Text("2023:12:01 15:30:00") },
+                modifier = Modifier.fillMaxWidth()
+            )
 
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 OutlinedTextField(
-                    value = state.exifData.make,
-                    onValueChange = {
-                        editViewModel.updateMake(it)
-                    },
-                    label = { Text("Устройство создания") },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 8.dp)
+                    value = state.exifData.latitude?.toString() ?: "",
+                    onValueChange = { editViewModel.updateLatitude(it) },
+                    label = { Text("Широта") },
+                    placeholder = { Text("55.7558") },
+                    modifier = Modifier.weight(1f)
                 )
 
                 OutlinedTextField(
-                    value = state.exifData.model,
-                    onValueChange = {
-                        editViewModel.updateModel(it)
-                    },
-                    label = { Text("Модель устройства") },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 16.dp)
+                    value = state.exifData.longitude?.toString() ?: "",
+                    onValueChange = { editViewModel.updateLongitude(it) },
+                    label = { Text("Долгота") },
+                    placeholder = { Text("37.6173") },
+                    modifier = Modifier.weight(1f)
                 )
+            }
 
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+            Spacer(modifier = Modifier.height(8.dp))
+
+            OutlinedTextField(
+                value = state.exifData.make,
+                onValueChange = { editViewModel.updateMake(it) },
+                label = { Text("Устройство") },
+                placeholder = { Text("Samsung") },
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            OutlinedTextField(
+                value = state.exifData.model,
+                onValueChange = { editViewModel.updateModel(it) },
+                label = { Text("Модель") },
+                placeholder = { Text("Galaxy S23") },
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                Button(
+                    onClick = { navController.popBackStack() },
+                    modifier = Modifier.weight(1f),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.secondary
+                    )
                 ) {
-                    Button(
-                        onClick = { navController.popBackStack() },
-                        modifier = Modifier.weight(1f),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.secondary
-                        )
-                    ) {
-                        Text("Отмена")
-                    }
+                    Text("Отмена")
+                }
 
-                    Button(
-                        onClick = {
-                            editViewModel.saveExifData()
-                        },
-                        modifier = Modifier.weight(1f),
-                        enabled = !state.isSaving
-                    ) {
-                        Text("Сохранить")
-                    }
+                Button(
+                    onClick = {
+                        editViewModel.saveExifData(imageUri)
+                    },
+                    modifier = Modifier.weight(1f),
+                    enabled = !state.isSaving && !state.isLoading
+                ) {
+                    Text("Сохранить копию")
                 }
             }
         }
