@@ -27,6 +27,11 @@ class MainViewModel(
         _state.update { it.copy(error = null) }
     }
 
+    fun reloadExifData(uri: String) {
+        _state.update { it.copy(isLoading = true) }
+        loadExifData(uri)
+    }
+
     private fun loadExifData(uri: String) {
         viewModelScope.launch {
             try {

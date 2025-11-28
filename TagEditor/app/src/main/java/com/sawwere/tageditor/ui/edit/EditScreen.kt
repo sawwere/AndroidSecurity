@@ -1,6 +1,7 @@
 package com.sawwere.tageditor.ui.edit
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -17,6 +18,7 @@ import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -44,7 +46,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.sawwere.tageditor.ui.AppViewModelProvider
-import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -54,16 +55,15 @@ fun EditScreen(
     editViewModel: EditViewModel = viewModel(factory = AppViewModelProvider.Factory)
 ) {
     val state by editViewModel.state.collectAsStateWithLifecycle()
+    val isFormValid = editViewModel.validateForm()
+    val isDateTimeValid = editViewModel.validateDateTime()
+    val areCoordinatesValid = editViewModel.validateCoordinates()
+    val dateTimeError = editViewModel.getDateTimeValidationError()
+    val coordinatesError = editViewModel.getCoordinatesValidationError()
+    val isCoordinatePartiallyFilled = editViewModel.isCoordinatePartiallyFilled()
 
     LaunchedEffect(imageUri) {
         editViewModel.loadImageData(imageUri)
-    }
-
-    LaunchedEffect(state.saveSuccess) {
-        if (state.saveSuccess == true) {
-            delay(1000)
-            navController.popBackStack()
-        }
     }
 
     Scaffold(
@@ -77,9 +77,11 @@ fun EditScreen(
                     )
                 },
                 navigationIcon = {
-                    IconButton(onClick = { navController.popBackStack() }) {
+                    IconButton(onClick = {
+                        navController.popBackStack()
+                    }) {
                         Icon(
-                            imageVector = Icons.Default.ArrowBack,
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Назад"
                         )
                     }
@@ -95,7 +97,6 @@ fun EditScreen(
                 .padding(innerPadding)
                 .fillMaxSize()
                 .padding(16.dp)
-                .verticalScroll(rememberScrollState())
         ) {
             if (state.isLoading) {
                 CircularProgressIndicator(
@@ -117,49 +118,10 @@ fun EditScreen(
                             .fillMaxWidth()
                             .padding(bottom = 16.dp)
                     )
-                    Text("Создание копии с новыми EXIF данными...")
+                    Text("Сохранение EXIF данных...")
                 }
             }
 
-            state.saveSuccess?.let { success ->
-                AlertDialog(
-                    onDismissRequest = { editViewModel.clearSaveStatus() },
-                    title = { Text(if (success) "Успех" else "Ошибка") },
-                    text = {
-                        Text(
-                            if (success)
-                                "Копия изображения с новыми EXIF данными успешно сохранена в галерее!"
-                            else
-                                state.error ?: "Ошибка при сохранении"
-                        )
-                    },
-                    confirmButton = {
-                        Button(onClick = {
-                            editViewModel.clearSaveStatus()
-                            if (success) {
-                                navController.popBackStack()
-                            }
-                        }) {
-                            Text("OK")
-                        }
-                    }
-                )
-            }
-
-            state.error?.let { error ->
-                AlertDialog(
-                    onDismissRequest = { editViewModel.clearError() },
-                    title = { Text("Ошибка") },
-                    text = { Text(error) },
-                    confirmButton = {
-                        Button(onClick = { editViewModel.clearError() }) {
-                            Text("OK")
-                        }
-                    }
-                )
-            }
-
-            // Информация о сохранении
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -172,13 +134,8 @@ fun EditScreen(
                     modifier = Modifier.padding(16.dp)
                 ) {
                     Text(
-                        "Изображение будет сохранено как копия",
+                        "Изменение EXIF данных изображения",
                         style = MaterialTheme.typography.bodyMedium
-                    )
-                    Text(
-                        "Исходное изображение останется неизменным. Новая копия с обновленными EXIF данными будет сохранена в галерее.",
-                        style = MaterialTheme.typography.bodySmall,
-                        modifier = Modifier.padding(top = 8.dp)
                     )
                 }
             }
@@ -188,7 +145,15 @@ fun EditScreen(
                 onValueChange = { editViewModel.updateDateTime(it) },
                 label = { Text("Дата создания (YYYY:MM:DD HH:MM:SS)") },
                 placeholder = { Text("2023:12:01 15:30:00") },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                isError = state.exifData.dateTime.isNotEmpty() && !isDateTimeValid,
+                supportingText = {
+                    if (state.exifData.dateTime.isNotEmpty() && !isDateTimeValid) {
+                        Text(dateTimeError ?: "Неверный формат даты")
+                    } else {
+                        Text("Формат: ГГГГ:ММ:ДД ЧЧ:ММ:СС")
+                    }
+                }
             )
 
             Spacer(modifier = Modifier.height(8.dp))
@@ -199,7 +164,17 @@ fun EditScreen(
                     onValueChange = { editViewModel.updateLatitude(it) },
                     label = { Text("Широта") },
                     placeholder = { Text("55.7558") },
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f),
+                    isError = state.exifData.latitude != null &&
+                            !editViewModel.isCoordinateValid(state.exifData.latitude, -90.0, 90.0),
+                    supportingText = {
+                        if (state.exifData.latitude != null &&
+                            !editViewModel.isCoordinateValid(state.exifData.latitude, -90.0, 90.0)) {
+                            Text("Широта должна быть от -90 до 90")
+                        } else {
+                            Text("От -90 до 90")
+                        }
+                    }
                 )
 
                 OutlinedTextField(
@@ -207,7 +182,35 @@ fun EditScreen(
                     onValueChange = { editViewModel.updateLongitude(it) },
                     label = { Text("Долгота") },
                     placeholder = { Text("37.6173") },
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f),
+                    isError = state.exifData.longitude != null &&
+                            !editViewModel.isCoordinateValid(state.exifData.longitude, -180.0, 180.0),
+                    supportingText = {
+                        if (state.exifData.longitude != null &&
+                            !editViewModel.isCoordinateValid(state.exifData.longitude, -180.0, 180.0)) {
+                            Text("Долгота должна быть от -180 до 180")
+                        } else {
+                            Text("От -180 до 180")
+                        }
+                    }
+                )
+            }
+
+            if (!areCoordinatesValid && (state.exifData.latitude != null || state.exifData.longitude != null)) {
+                Text(
+                    coordinatesError ?: "Исправьте ошибки в координатах",
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodySmall,
+                    modifier = Modifier.padding(top = 4.dp, start = 16.dp)
+                )
+            }
+
+            if (isCoordinatePartiallyFilled) {
+                Text(
+                    "Заполните оба поля координат",
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodySmall,
+                    modifier = Modifier.padding(top = 4.dp, start = 16.dp)
                 )
             }
 
@@ -249,11 +252,45 @@ fun EditScreen(
                         editViewModel.saveExifData(imageUri)
                     },
                     modifier = Modifier.weight(1f),
-                    enabled = !state.isSaving && !state.isLoading
+                    enabled = !state.isSaving && !state.isLoading && isFormValid
                 ) {
-                    Text("Сохранить копию")
+                    Text("Сохранить")
                 }
             }
         }
+    }
+
+    if (state.saveSuccess == true) {
+        AlertDialog(
+            onDismissRequest = {
+                editViewModel.clearSaveStatus()
+                navController.popBackStack()
+            },
+            title = { Text("Успех") },
+            text = {
+                Text("EXIF данные успешно сохранены в исходном изображении!")
+            },
+            confirmButton = {
+                Button(onClick = {
+                    editViewModel.clearSaveStatus()
+                    navController.popBackStack()
+                }) {
+                    Text("OK")
+                }
+            }
+        )
+    }
+
+    state.error?.let { error ->
+        AlertDialog(
+            onDismissRequest = { editViewModel.clearError() },
+            title = { Text("Ошибка") },
+            text = { Text(error) },
+            confirmButton = {
+                Button(onClick = { editViewModel.clearError() }) {
+                    Text("OK")
+                }
+            }
+        )
     }
 }
