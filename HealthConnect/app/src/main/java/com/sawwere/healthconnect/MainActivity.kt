@@ -1,13 +1,8 @@
 package com.sawwere.healthconnect
 
-import android.content.Intent
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.result.ActivityResultLauncher
-import androidx.activity.result.IntentSenderRequest
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
@@ -16,15 +11,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.health.connect.client.HealthConnectClient
 import androidx.health.connect.client.PermissionController
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.sawwere.healthconnect.data.HealthConnectProvider
-import com.sawwere.healthconnect.data.HealthConnectRepository
 import com.sawwere.healthconnect.ui.HealthConnectViewModel
 import com.sawwere.healthconnect.ui.insert.InsertDataScreen
 import com.sawwere.healthconnect.ui.main.MainScreen
@@ -91,6 +82,7 @@ fun HealthConnectApp(viewModel: HealthConnectViewModel) {
                     InsertDataScreen(
                         viewModel = viewModel,
                         onNavigateBack = {
+                            viewModel.clearMessages()
                             navController.popBackStack()
                         }
                     )

@@ -1,28 +1,14 @@
 package com.sawwere.healthconnect.data
 
-import android.annotation.SuppressLint
-import android.app.Activity
-import android.content.Context
-import android.util.Log
-import androidx.activity.result.ActivityResultLauncher
-import androidx.activity.result.IntentSenderRequest
 import androidx.health.connect.client.HealthConnectClient
-import androidx.health.connect.client.HealthConnectClient.Companion.getOrCreate
-import androidx.health.connect.client.permission.HealthPermission
 import androidx.health.connect.client.records.StepsRecord
 import androidx.health.connect.client.records.WeightRecord
 import androidx.health.connect.client.request.AggregateRequest
 import androidx.health.connect.client.request.ReadRecordsRequest
 import androidx.health.connect.client.time.TimeRangeFilter
 import androidx.health.connect.client.units.Mass
-import androidx.health.connect.client.permission.HealthPermission.Companion.getReadPermission
-import androidx.health.connect.client.permission.HealthPermission.Companion.getWritePermission
-import androidx.health.connect.client.records.metadata.Device
-import androidx.health.connect.client.records.metadata.Metadata
-import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
-
 
 
 class HealthConnectRepository(private val client: HealthConnectClient?) {
@@ -59,7 +45,7 @@ class HealthConnectRepository(private val client: HealthConnectClient?) {
         if (client == null) return false
 
         return try {
-            val time = date.atTime(12, 0)
+            val time = date.atTime(0, 0)
                 .atZone(ZoneId.systemDefault())
                 .toInstant()
 
@@ -72,6 +58,7 @@ class HealthConnectRepository(private val client: HealthConnectClient?) {
             client.insertRecords(listOf(weightRecord))
             true
         } catch (e: Exception) {
+            e.printStackTrace()
             false
         }
     }

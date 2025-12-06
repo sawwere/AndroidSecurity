@@ -7,11 +7,9 @@
     <uses-permission android:name="android.permission.health.READ_WEIGHT" />
     <uses-permission android:name="android.permission.health.WRITE_WEIGHT" />
 
-    <!-- Обязательно: queries для Health Connect -->
     <queries>
         <package android:name="com.google.android.apps.healthdata" />
 
-        <!-- Intent фильтры для Health Connect -->
         <intent>
             <action android:name="android.health.connect.action.MANAGE_HEALTH_PERMISSIONS" />
         </intent>

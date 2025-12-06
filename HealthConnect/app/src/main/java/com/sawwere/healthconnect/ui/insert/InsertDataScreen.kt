@@ -13,8 +13,6 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
@@ -31,18 +29,19 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.sawwere.healthconnect.R
 import com.sawwere.healthconnect.data.DataType
 import com.sawwere.healthconnect.ui.DatePick
 import com.sawwere.healthconnect.ui.HealthConnectViewModel
 import com.sawwere.healthconnect.ui.toEpochSeconds
 import com.sawwere.healthconnect.ui.toLocalDate
 import java.time.LocalDate
-import java.time.format.DateTimeFormatter
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -57,10 +56,8 @@ fun InsertDataScreen(
     var weightValue by remember { mutableStateOf("") }
     val selectedTimestamp = remember { mutableStateOf(LocalDate.now().toEpochSeconds()) }
 
-    LaunchedEffect(uiState.successMessage) {
-        if (uiState.successMessage?.contains("added successfully") == true) {
-            onNavigateBack()
-        }
+    LaunchedEffect(Unit) {
+        viewModel.clearMessages()
     }
 
     Column(
@@ -74,13 +71,16 @@ fun InsertDataScreen(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "Add Health Data",
+                text = stringResource(R.string.add_health_data),
                 fontSize = 24.sp,
                 fontWeight = FontWeight.Bold
             )
 
-            IconButton(onClick = onNavigateBack) {
-                Icon(Icons.Default.Close, contentDescription = "Close")
+            IconButton(onClick = {
+                viewModel.clearMessages()
+                onNavigateBack()
+            }) {
+                Icon(Icons.Default.Close, contentDescription = stringResource(R.string.close))
             }
         }
 
@@ -90,7 +90,7 @@ fun InsertDataScreen(
             modifier = Modifier.fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text("Select data type:", style = MaterialTheme.typography.labelLarge)
+            Text(stringResource(R.string.select_data_type), style = MaterialTheme.typography.labelLarge)
             Spacer(modifier = Modifier.height(8.dp))
             Row(
                 horizontalArrangement = Arrangement.SpaceEvenly,
@@ -100,7 +100,14 @@ fun InsertDataScreen(
                     FilterChip(
                         selected = selectedDataType == type,
                         onClick = { selectedDataType = type },
-                        label = { Text(type.name) }
+                        label = {
+                            Text(
+                                when(type) {
+                                    DataType.STEPS -> stringResource(R.string.steps)
+                                    DataType.WEIGHT -> stringResource(R.string.weight)
+                                }
+                            )
+                        }
                     )
                 }
             }
@@ -113,36 +120,22 @@ fun InsertDataScreen(
                 OutlinedTextField(
                     value = stepsCount,
                     onValueChange = { stepsCount = it },
-                    label = { Text("Steps count") },
+                    label = { Text(stringResource(R.string.steps_count)) },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
-                    placeholder = { Text("Enter number of steps") }
-                )
-
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    text = "Example: 10000 steps for a full day",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.outline
+                    placeholder = { Text(stringResource(R.string.enter_steps)) }
                 )
             }
             DataType.WEIGHT -> {
                 OutlinedTextField(
                     value = weightValue,
                     onValueChange = { weightValue = it },
-                    label = { Text("Weight (kg)") },
+                    label = { Text(stringResource(R.string.weight_kg)) },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
-                    placeholder = { Text("Enter weight in kilograms") }
-                )
-
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    text = "Example: 75.5 for 75.5 kilograms",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.outline
+                    placeholder = { Text(stringResource(R.string.enter_weight)) }
                 )
             }
         }
@@ -153,7 +146,7 @@ fun InsertDataScreen(
             modifier = Modifier.fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text("Select Date:", style = MaterialTheme.typography.labelLarge)
+            Text(stringResource(R.string.select_date), style = MaterialTheme.typography.labelLarge)
             Spacer(modifier = Modifier.height(8.dp))
             DatePick(
                 time = selectedTimestamp,
@@ -171,17 +164,18 @@ fun InsertDataScreen(
                         val count = stepsCount.toLongOrNull()
                         if (count != null) {
                             viewModel.insertSteps(count, selectedDate)
+                            stepsCount = ""
                         } else {
-                            // Показываем ошибку, если ввод некорректный
-                            //viewModel.setErrorMessage("Please enter a valid number for steps")
+                            viewModel.setErrorMessage("Пожалуйста, введите корректное число шагов")
                         }
                     }
                     DataType.WEIGHT -> {
                         val weight = weightValue.toDoubleOrNull()
                         if (weight != null) {
                             viewModel.insertWeight(weight, selectedDate)
+                            weightValue = ""
                         } else {
-                            println("Please enter a valid weight (e.g., 75.5)")
+                            viewModel.setErrorMessage("Пожалуйста, введите корректный вес (например, 75.5)")
                         }
                     }
                 }
@@ -192,7 +186,7 @@ fun InsertDataScreen(
                 DataType.WEIGHT -> weightValue.isNotBlank() && weightValue.toDoubleOrNull() != null
             }
         ) {
-            Text("Save Data", fontSize = 18.sp)
+            Text(stringResource(R.string.save_data), fontSize = 18.sp)
         }
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -204,61 +198,17 @@ fun InsertDataScreen(
             ) {
                 CircularProgressIndicator()
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("Saving data...")
+                Text(stringResource(R.string.saving_data))
             }
         }
 
         uiState.errorMessage?.let { error ->
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 8.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.errorContainer
-                )
-            ) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    Text(
-                        text = "Error",
-                        style = MaterialTheme.typography.titleSmall,
-                        color = MaterialTheme.colorScheme.error
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = error,
-                        color = MaterialTheme.colorScheme.onErrorContainer
-                    )
-                }
-            }
-        }
-
-        uiState.successMessage?.let { message ->
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 8.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer
-                )
-            ) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    Text(
-                        text = "Success",
-                        style = MaterialTheme.typography.titleSmall,
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = message,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer
-                    )
-                }
-            }
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = error,
+                color = MaterialTheme.colorScheme.error,
+                modifier = Modifier.padding(horizontal = 8.dp)
+            )
         }
     }
-}
-
-fun formatDate(date: LocalDate): String {
-    val formatter = DateTimeFormatter.ofPattern("dd MMM yyyy")
-    return date.format(formatter)
 }

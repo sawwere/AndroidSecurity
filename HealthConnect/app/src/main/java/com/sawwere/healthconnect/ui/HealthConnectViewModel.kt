@@ -1,14 +1,14 @@
 package com.sawwere.healthconnect.ui
 
-import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.sawwere.healthconnect.MainActivity
 import com.sawwere.healthconnect.data.DataType
 import com.sawwere.healthconnect.data.HealthConnectProvider
-import com.sawwere.healthconnect.data.HealthConnectRepository
 import com.sawwere.healthconnect.data.HealthData
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.ZoneId
@@ -215,6 +215,14 @@ class HealthConnectViewModel(
         }
     }
 
+    fun updateDateRange(startDate: LocalDate, endDate: LocalDate) {
+        loadData(_uiState.value.selectedDataType, startDate, endDate)
+    }
+
+    fun updateDataType(dataType: DataType) {
+        loadData(dataType, _uiState.value.startDate, _uiState.value.endDate)
+    }
+
     fun deleteRecord(record: HealthData) {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
@@ -231,7 +239,7 @@ class HealthConnectViewModel(
                 if (success) {
                     loadData()
                     _uiState.update { it.copy(
-                        successMessage = "Record deleted successfully",
+                        successMessage = "${record::class.simpleName} deleted successfully",
                         isLoading = false
                     )}
                 } else {
@@ -249,19 +257,26 @@ class HealthConnectViewModel(
         }
     }
 
-    fun updateDateRange(startDate: LocalDate, endDate: LocalDate) {
-        loadData(_uiState.value.selectedDataType, startDate, endDate)
-    }
-
-    fun updateDataType(dataType: DataType) {
-        loadData(dataType, _uiState.value.startDate, _uiState.value.endDate)
+    fun setErrorMessage(message: String) {
+        viewModelScope.launch {
+            _uiState.update {
+                it.copy(
+                    errorMessage = message,
+                    isLoading = false
+                )
+            }
+        }
     }
 
     fun clearMessages() {
-        _uiState.update { it.copy(
-            errorMessage = null,
-            successMessage = null
-        )}
+        viewModelScope.launch {
+            _uiState.update {
+                it.copy(
+                    errorMessage = null,
+                    successMessage = null
+                )
+            }
+        }
     }
 }
 
